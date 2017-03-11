@@ -1,0 +1,17 @@
+{
+  "name": "norman",
+  "version": "0.1.0",
+  "description": "Norman: the optimizing data service layer. No ORM and No NoSql.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mason Kramer",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^7.0.8"
+  },
+  "dependencies": {
+    "rxjs": "^5.2.0"
+  }
+}

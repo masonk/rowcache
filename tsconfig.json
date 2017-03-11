@@ -1,0 +1,38 @@
+{	
+	"compileOnSave": true,
+    "compilerOptions": {
+		"target": "es2016",
+        // "lib": ["es2016", "dom", "node"],
+        "module":"commonjs",
+        "moduleResolution": "node", //to look up node_modules/@types/**
+        // "target": "es6",
+		// "module": "es6", // default
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+		"sourceMap": true,
+        // "jsx": "react",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "strictNullChecks": true, // Off for json-typescript-mapper
+
+        // This must be kept in sync with output.path and resolve.root
+        // in dll.webpack.config and dll.webpack.config
+		"outDir": "build",
+        // "typeRoots" : ["typings", "@types"],
+        "baseUrl": "src",
+        "paths": {
+            "*": [
+                "*"
+            ]
+        }
+	}
+    // "include": [
+    //     "./**/*"
+    // ]
+    //"exclude": [
+        // "exclude" property defaults to excluding the 
+        // node_modules, bower_components, and jspm_packages 
+        // directories when not specified.
+    //]
+}
