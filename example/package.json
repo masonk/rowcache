@@ -1,0 +1,14 @@
+{
+  "name": "norman-examples",
+  "version": "0.1.0",
+  "description": "Fully working local example of Norman's capabilities.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mason Kramer",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "norman": "^0.1.0"
+  }
+}
