@@ -1,6 +1,6 @@
 import { QueryManifest, WhereRelationship } from "norman";
 
-export var manifest: QueryManifest = {
+export const manifest: QueryManifest = {
     "tables": {
         "user": {
             "login": { "type": "varchar(256)" },
