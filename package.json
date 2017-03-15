@@ -2,7 +2,7 @@
   "name": "norman",
   "version": "0.1.0",
   "description": "Norman: the optimizing data service layer. No ORM and No NoSql.",
-  "main": "index.js",
+  "main": "dist/norman",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +12,16 @@
     "@types/node": "^7.0.8"
   },
   "dependencies": {
-    "rxjs": "^5.2.0"
+    "@types/mkdirp": "^0.3.29",
+    "app-module-path": "^2.2.0",
+    "case": "^1.5.0",
+    "mkdirp": "^0.5.1",
+    "protobufjs": "^6.6.5",
+    "rxjs": "^5.2.0",
+    "ts-node": "^2.1.0",
+    "yargs": "^7.0.2"
+  },
+  "bin": {
+    "normanc": "dist/normanc.js"
   }
 }
