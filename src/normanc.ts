@@ -42,7 +42,7 @@ let ret = child.exec(`${pbjs} -t static-module -w commonjs --out ${protojs} ${pr
     if (!err) {
         child.exec(`${pbts} --out ${protots} ${protojs}`, (err, out, stderr) => {
             if (out) console.log(out)
-            if (err) console.log(err)
+            if (err) console.warn(err)
             if (stderr) console.warn(stderr);
         });
     }
