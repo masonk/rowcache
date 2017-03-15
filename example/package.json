@@ -10,5 +10,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "norman": "^0.1.0"
+  },
+  "scripts": {
+      "generate": "normanc build/querymanifest.js generated"
   }
 }

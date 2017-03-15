@@ -1,6 +1,7 @@
 import * as norman from "norman"
 import { ResultSet, ResultSetDiff } from "norman"
 import { Observable } from "rxjs"
+import * as messages from "./normanc_messages"
 
 export class get_user_by_login {
     constructor(private login: string) {}
