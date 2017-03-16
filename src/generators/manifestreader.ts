@@ -3,8 +3,23 @@ import * as fs from "fs";
 import * as Case from "case";
 
 export class ManifestGenerator {
+    private indent = 0;
+    public stream: fs.WriteStream;
     constructor(protected manifest: norman.QueryManifest, protected outdir: string) {}
-    
+    write(msg: string) {
+        this.stream.write(this.idt(msg) + `\n`);
+    }
+    idt(msg: string) {
+        return Array(this.indent).fill(`\t`).join("") + msg;
+    }
+    startBlock(msg: string) {
+        this.write(msg);
+        this.indent += 1;
+    }
+    endBlock(msg: string) {
+        this.indent -= 1;
+        this.write(msg);
+    }
     lookupType(fqType: string): string {
         let [tableName, columnName] = fqType.split(`\.`);
         return this.manifest.tables[tableName][columnName].type;
@@ -16,5 +31,16 @@ export class ManifestGenerator {
         for (let tname of Object.keys(table)) {
             fn(tname, table[tname]);
         }
+    }
+    requestName = (query: norman.Query) => Case.pascal(query.name);
+    responseName = (query: norman.Query) => Case.pascal(`${this.requestName(query)}Response`);
+    queryMap() {
+        let map = new Map<number, string>();
+        let i = 1;
+        for (let query of this.manifest.queries) {
+            map.set(i++, this.requestName(query));
+            map.set(i++, this.responseName(query));
+        }
+        return map;
     }
 }
