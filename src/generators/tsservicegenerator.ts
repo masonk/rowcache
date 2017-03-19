@@ -30,19 +30,19 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         this.write(`import { Observable } from "rxjs"`)
         this.write(`import * as messages from "./norman_messages"\n`);
 
-        this.startBlock(`const EnumClassMap = new Map<messages.MessageType, { new(): any }>([`)
+        this.startBlock(`export const EnumClassMap = new Map<messages.MessageType, { new(): any }>([`)
         for (let [idx, name] of this.queryMap()) {
             this.write(`[messages.MessageType.${name}, messages.${name}],`);
         }
         this.endBlock(`])\n`);
 
-        this.startBlock(`const ClassMap = new Map<number, { new(): any }>([`)
+        this.startBlock(`export const ClassMap = new Map<number, { new(): any }>([`)
         for (let [idx, name] of qMap) {
             this.write(`[${idx}, messages.${name}],`);
         }
         this.endBlock(`])\n`);
 
-        this.startBlock(`const ResponseMap = new Map<messages.MessageType, messages.MessageType>([`)
+        this.startBlock(`export const ResponseMap = new Map<messages.MessageType, messages.MessageType>([`)
             for (let [req, res] of this.responseMap()) {
                 this.write(`[messages.MessageType.${req}, messages.MessageType.${res}],`)
             }

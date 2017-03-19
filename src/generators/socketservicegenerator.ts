@@ -58,7 +58,7 @@ export class WebsocketService extends NormanService {
 	    /* Reuse the HTTP/2 frame protocol, rfc 7540 4.1
 	    
 	        All frames begin with a fixed 9-octet header followed by a variable-
-	        length payload.
+	        length payload. All numbers are big endian.
 	
 	        +-----------------------------------------------+
 	        |                 Length (24)                   |
