@@ -8,7 +8,7 @@ import { Observable } from "rxjs"
 type TypeScriptType = "string" | "number" | "boolean" 
  | "any";
 
-export class TypeScriptServiceBuilder extends ManifestGenerator {
+export class TypeScriptServiceGenerator extends ManifestGenerator {
     constructor(manifest: norman.QueryManifest, outdir: string) {
         super(manifest, outdir);
     }
@@ -30,16 +30,22 @@ export class TypeScriptServiceBuilder extends ManifestGenerator {
         this.write(`import { Observable } from "rxjs"`)
         this.write(`import * as messages from "./norman_messages"\n`);
 
-        this.startBlock(`const enumClassMap = new Map<messages.MessageType, { new(): any }>([`)
+        this.startBlock(`const EnumClassMap = new Map<messages.MessageType, { new(): any }>([`)
         for (let [idx, name] of this.queryMap()) {
             this.write(`[messages.MessageType.${name}, messages.${name}],`);
         }
         this.endBlock(`])\n`);
 
-        this.startBlock(`const classMap = new Map<number, { new(): any }>([`)
+        this.startBlock(`const ClassMap = new Map<number, { new(): any }>([`)
         for (let [idx, name] of qMap) {
             this.write(`[${idx}, messages.${name}],`);
         }
+        this.endBlock(`])\n`);
+
+        this.startBlock(`const ResponseMap = new Map<messages.MessageType, messages.MessageType>([`)
+            for (let [req, res] of this.responseMap()) {
+                this.write(`[messages.MessageType.${req}, messages.MessageType.${res}],`)
+            }
         this.endBlock(`])\n`);
 
         let observeOverloads: string[] = [];
@@ -51,7 +57,6 @@ export class TypeScriptServiceBuilder extends ManifestGenerator {
             let qname = Case.pascal(`${query.name}`);
             let fqname = `messages.${qname}`
 
-
             observeOverloads.push(`observe(req: ${fqname}): Observable<ResultSet<${fqname}Response>>;`);
             observeDiffOverloads.push(`observeDiffs(req: ${fqname}): Observable<ResultSetDiff<${fqname}Response>>;`);
             queryOverloads.push(`query(req: ${fqname}): Promise<ResultSet<${fqname}Response>>;`)
@@ -59,8 +64,8 @@ export class TypeScriptServiceBuilder extends ManifestGenerator {
 
 
         this.startBlock("export abstract class NormanService {");
-            [`abstract startObserve(req: any): Observable<ResultSet<any>>;`,
-            `abstract startObserveDiffs(req: any): Observable<ResultSetDiff<any>>;`,
+            [`abstract startObserve(type: messages.MessageType, req: any): Observable<ResultSet<any>>;`,
+            `abstract startObserveDiffs(type: messages.MessageTYpe, req: any): Observable<ResultSetDiff<any>>;`,
             `abstract startQuery(req: any): Promise<any>;`].forEach(line => {
                 this.write(line);
             });
@@ -84,25 +89,21 @@ export class TypeScriptServiceBuilder extends ManifestGenerator {
                 this.write(ol);
             }
 
-            this.startBlock(`observe(req: any) {`);
-                this.startBlock(`let pb = messages.Envelope.encode({`);
-                    this.write(`type: this.getMessageType(req),`);
-                    this.write(`message: req.encode().finish()`);
-                this.endBlock(`}).finish();`)
-                this.write(`return this.startObserve(pb);`)
+            this.startBlock(`observe(req: Uint8Array) {`);
+                this.write(`return this.startObserve(req);`)
             this.endBlock(`}`);
 
             for (let ol of observeDiffOverloads) {
                 this.write(ol);
             }
-            this.startBlock(`observeDiffs(req: any) {`);
+            this.startBlock(`observeDiffs(req: Uint8Array) {`);
                 this.write(`return this.startObserveDiffs(req);`)
             this.endBlock(`}`);
 
             for (let ol of queryOverloads) {
                 this.write(ol);
             }
-            this.startBlock(`query(req: any) {`);
+            this.startBlock(`query(req: Uint8Array) {`);
                 this.write(`return this.startQuery(req);`)
             this.endBlock(`}`);
 

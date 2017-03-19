@@ -3,8 +3,9 @@ require('app-module-path').addPath(__dirname);
 import * as mkdirp from "mkdirp";
 import * as fs from "fs";
 import * as path from "path";
-import { TypeScriptServiceBuilder } from "generators/tsservicebuilder";
-import { ProtoBuilder } from "generators/protobuilder";
+import { TypeScriptServiceGenerator } from "generators/tsservicegenerator";
+import { TypeScriptSocketServiceGenerator } from "generators/socketservicegenerator";
+import { ProtoGenerator } from "generators/protogenerator";
 import * as child from "child_process";
 
 let argv = require('yargs')
@@ -19,19 +20,22 @@ let fqmanpath = path.resolve(process.cwd(), manpath);
 let manifest = require(fqmanpath).manifest;
 let fqoutdir = path.resolve(path.resolve(process.cwd(), outdir));
 
-let tsbuilder = new TypeScriptServiceBuilder(manifest, path.resolve(fqoutdir, "norman_services.ts"));
+let tsbuilder = new TypeScriptServiceGenerator(manifest, path.resolve(fqoutdir, "normanservice.ts"));
 
 if (!fs.existsSync(fqoutdir)) {
     mkdirp.sync(fqoutdir);
 }
 tsbuilder.emit();
 
-let protofile = path.resolve(fqoutdir, "norman_messages.proto");
-let protobuilder = new ProtoBuilder(manifest, protofile);
+let socketgenerator = new TypeScriptSocketServiceGenerator(manifest, path.resolve(fqoutdir, "socketservice.ts"));
+socketgenerator.emit();
+
+let protofile = path.resolve(fqoutdir, "messages.proto");
+let protobuilder = new ProtoGenerator(manifest, protofile);
 protobuilder.emit();
 
-let protojs = path.resolve(fqoutdir, `norman_messages.js`);
-let protots = path.resolve(fqoutdir, `norman_messages.d.ts`);
+let protojs = path.resolve(fqoutdir, `messages.js`);
+let protots = path.resolve(fqoutdir, `messages.d.ts`);
 let pbjs = path.resolve(__dirname, "../node_modules/.bin/pbjs");
 let pbts = path.resolve(__dirname, "../node_modules/.bin/pbts");
 let ret = child.exec(`${pbjs} -t static-module -w commonjs --out ${protojs} ${protofile}`, (err, out, stderr) => {

@@ -10,7 +10,8 @@ export class ManifestGenerator {
         this.stream.write(this.idt(msg) + `\n`);
     }
     idt(msg: string) {
-        return Array(this.indent).fill(`\t`).join("") + msg;
+        let tabs = Array(this.indent).fill(`\t`).join("");
+        return msg.replace(/^/gm, tabs);
     }
     startBlock(msg: string) {
         this.write(msg);
@@ -42,5 +43,13 @@ export class ManifestGenerator {
             map.set(i++, this.responseName(query));
         }
         return map;
+    }
+    responseMap() {
+        let map = new Map<string, string>();
+        let i = 1;
+        for (let query of this.manifest.queries) {
+            map.set(this.requestName(query), this.responseName(query));
+        }
+        return map; 
     }
 }

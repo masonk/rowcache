@@ -10,7 +10,9 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@types/node": "^7.0.8",
-    "@types/sockjs": "^0.3.30"
+    "@types/sockjs": "^0.3.30",
+    "@types/websocket": "0.0.33",
+    "retyped-websocket-tsd-ambient": "0.0.0-0"
   },
   "dependencies": {
     "@types/mkdirp": "^0.3.29",
