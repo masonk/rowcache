@@ -20,7 +20,7 @@ let fqmanpath = path.resolve(process.cwd(), manpath);
 let manifest = require(fqmanpath).manifest;
 let fqoutdir = path.resolve(path.resolve(process.cwd(), outdir));
 
-let tsbuilder = new TypeScriptServiceGenerator(manifest, path.resolve(fqoutdir, "normanservice.ts"));
+let tsbuilder = new TypeScriptServiceGenerator(manifest, path.resolve(fqoutdir, "rowcacheservice.ts"));
 
 if (!fs.existsSync(fqoutdir)) {
     mkdirp.sync(fqoutdir);

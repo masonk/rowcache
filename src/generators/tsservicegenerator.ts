@@ -1,15 +1,15 @@
-import * as norman from "norman";
+import * as rowcache from "rowcache";
 import * as fs from "fs";
 import { ManifestGenerator } from "generators/manifestreader";
 import * as Case from "case";
-import { ResultSet, ResultSetDiff } from "norman"
+import { ResultSet, ResultSetDiff } from "rowcache"
 import { Observable } from "rxjs"
 
 type TypeScriptType = "string" | "number" | "boolean" 
  | "any";
 
 export class TypeScriptServiceGenerator extends ManifestGenerator {
-    constructor(manifest: norman.QueryManifest, outdir: string) {
+    constructor(manifest: rowcache.QueryManifest, outdir: string) {
         super(manifest, outdir);
     }
     private mapType(manifestType: string): TypeScriptType {
@@ -25,10 +25,10 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         this.stream = fs.createWriteStream(dest, { flags: "w" });
         let qMap = this.queryMap();
 
-        this.write(`import * as norman from "norman"`);
-        this.write(`import { ResultSet, ResultSetDiff } from "norman"`);
+        this.write(`import * as rowcache from "rowcache"`);
+        this.write(`import { ResultSet, ResultSetDiff } from "rowcache"`);
         this.write(`import { Observable } from "rxjs"`)
-        this.write(`import * as messages from "./norman_messages"\n`);
+        this.write(`import * as messages from "./messages"\n`);
 
         this.startBlock(`export const EnumClassMap = new Map<messages.MessageType, { new(): any }>([`)
         for (let [idx, name] of this.queryMap()) {
@@ -48,6 +48,10 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
             }
         this.endBlock(`])\n`);
 
+        let requestTypes = this.responseMap().keys();
+        let requestTypeString = [...requestTypes].map(t => `messages.${t}`).join("  | ");
+        this.write(`type RequestType = ${requestTypeString}`);
+
         let observeOverloads: string[] = [];
         let observeDiffOverloads: string[] = [];
         let queryOverloads: string[] = [];
@@ -65,8 +69,8 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
 
         this.startBlock("export abstract class NormanService {");
             [`abstract startObserve(type: messages.MessageType, req: any): Observable<ResultSet<any>>;`,
-            `abstract startObserveDiffs(type: messages.MessageTYpe, req: any): Observable<ResultSetDiff<any>>;`,
-            `abstract startQuery(req: any): Promise<any>;`].forEach(line => {
+            `abstract startObserveDiffs(type: messages.MessageType, req: any): Observable<ResultSetDiff<any>>;`,
+            `abstract startQuery(type: messages.MessageType, req: any): Promise<any>;`].forEach(line => {
                 this.write(line);
             });
     /*        let messageType: messages.MessageType;
@@ -89,22 +93,22 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
                 this.write(ol);
             }
 
-            this.startBlock(`observe(req: Uint8Array) {`);
-                this.write(`return this.startObserve(req);`)
+            this.startBlock(`observe(req: RequestType) {`);
+                this.write(`return this.startObserve(this.getMessageType(req), req);`)
             this.endBlock(`}`);
 
             for (let ol of observeDiffOverloads) {
                 this.write(ol);
             }
-            this.startBlock(`observeDiffs(req: Uint8Array) {`);
-                this.write(`return this.startObserveDiffs(req);`)
+            this.startBlock(`observeDiffs(req: RequestType) {`);
+                this.write(`return this.startObserveDiffs(this.getMessageType(req), req);`)
             this.endBlock(`}`);
 
             for (let ol of queryOverloads) {
                 this.write(ol);
             }
-            this.startBlock(`query(req: Uint8Array) {`);
-                this.write(`return this.startQuery(req);`)
+            this.startBlock(`query(req: RequestType) {`);
+                this.write(`return this.startQuery(this.getMessageType(req), req);`)
             this.endBlock(`}`);
 
         this.endBlock(`}`);

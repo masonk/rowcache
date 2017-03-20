@@ -1,4 +1,4 @@
-import { QueryManifest, WhereRelationship } from "norman";
+import { QueryManifest, WhereRelationship } from "rowcache";
 
 export const manifest: QueryManifest = {
     "tables": {

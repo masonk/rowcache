@@ -1,11 +1,11 @@
-import * as norman from "norman";
+import * as rowcache from "rowcache";
 import * as fs from "fs";
 import * as Case from "case";
 
 export class ManifestGenerator {
     private indent = 0;
     public stream: fs.WriteStream;
-    constructor(protected manifest: norman.QueryManifest, protected outdir: string) {}
+    constructor(protected manifest: rowcache.QueryManifest, protected outdir: string) {}
     write(msg: string) {
         this.stream.write(this.idt(msg) + `\n`);
     }
@@ -25,16 +25,16 @@ export class ManifestGenerator {
         let [tableName, columnName] = fqType.split(`\.`);
         return this.manifest.tables[tableName][columnName].type;
     }
-    lookupTable(name: string): norman.Table {
+    lookupTable(name: string): rowcache.Table {
         return this.manifest.tables[name];
     }
-    iterateTable(table: norman.Table, fn: (name: string, field: norman.ColumnInfo) => void) {
+    iterateTable(table: rowcache.Table, fn: (name: string, field: rowcache.ColumnInfo) => void) {
         for (let tname of Object.keys(table)) {
             fn(tname, table[tname]);
         }
     }
-    requestName = (query: norman.Query) => Case.pascal(query.name);
-    responseName = (query: norman.Query) => Case.pascal(`${this.requestName(query)}Response`);
+    requestName = (query: rowcache.Query) => Case.pascal(query.name);
+    responseName = (query: rowcache.Query) => Case.pascal(`${this.requestName(query)}Response`);
     queryMap() {
         let map = new Map<number, string>();
         let i = 1;

@@ -1,8 +1,8 @@
 {
-  "name": "norman",
+  "name": "rowcache",
   "version": "0.1.0",
-  "description": "Norman: the optimizing data service layer. No ORM and No NoSql.",
-  "main": "dist/norman",
+  "description": "rowcache: the optimizing data service layer. No ORM and No NoSql.",
+  "main": "dist/rowcache",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -23,9 +23,10 @@
     "rxjs": "^5.2.0",
     "sockjs": "^0.3.18",
     "ts-node": "^2.1.0",
+    "websocket": "^1.0.24",
     "yargs": "^7.0.2"
   },
   "bin": {
-    "normanc": "dist/normanc.js"
+    "rowcachec": "dist/rowcachec.js"
   }
 }

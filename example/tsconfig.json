@@ -1,9 +1,12 @@
 {	
 	"compileOnSave": true,
     "compilerOptions": {
-		"target": "ES2016 ",
+		"target": "es2016",
         "module":"commonjs",
-        "libs": ["ES2016", "DOM"],
+        "lib": [
+            "es2016",
+            "dom"
+        ],
         "moduleResolution": "node",
         "noImplicitAny": true,
         "preserveConstEnums": true,

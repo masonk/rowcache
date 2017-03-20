@@ -1,8 +1,8 @@
-import * as norman from "norman";
+import * as rowcache from "rowcache";
 import * as fs from "fs";
 import { ManifestGenerator } from "generators/manifestreader";
 import * as Case from "case";
-import { ResultSet, ResultSetDiff } from "norman"
+import { ResultSet, ResultSetDiff } from "rowcache"
 import { Observable } from "rxjs"
 
 type TypeScriptType = "string" | "number" | "boolean" 
@@ -14,7 +14,7 @@ type TypeScriptType = "string" | "number" | "boolean"
    
 */
 export class TypeScriptSocketServiceGenerator extends ManifestGenerator {
-    constructor(manifest: norman.QueryManifest, outdir: string) {
+    constructor(manifest: rowcache.QueryManifest, outdir: string) {
         super(manifest, outdir);
     }
     private mapType(manifestType: string): TypeScriptType {
@@ -31,7 +31,7 @@ export class TypeScriptSocketServiceGenerator extends ManifestGenerator {
         let qMap = this.queryMap();
 
 
-        this.write(`import { NormanService, ResponseMap  } from "./normanservice"
+        this.write(`import { NormanService, ResponseMap  } from "./rowcacheservice"
 import * as messages from "./messages";
 import { client } from "websocket";
 import * as Rx from "rxjs";
@@ -54,55 +54,83 @@ export class WebsocketService extends NormanService {
 		}
 		return this.sid;
 	}
-	makeFrame(sid: number, envelope: protobuf.Writer): Uint8Array {
-	    /* Reuse the HTTP/2 frame protocol, rfc 7540 4.1
-	    
-	        All frames begin with a fixed 9-octet header followed by a variable-
-	        length payload. All numbers are big endian.
-	
-	        +-----------------------------------------------+
-	        |                 Length (24)                   |
-	        +---------------+---------------+---------------+
-	        |   Type (8)    |   Flags (8)   |
-	        +-+-------------+---------------+-------------------------------+
-	        |R|                 Stream Identifier (31)                      |
-	        +=+=============================================================+
-	
-	    */
-	    const len = envelope.len;
-	    if (len > Math.pow(2, 24) - 1) {
-	        throw new RangeError("Cannot send messages greater than 2^24-1 bytes");
-	    }
-	    let view  = new DataView(new ArrayBuffer(9));
-	    view.setUint32(0, len);
-	    for (let i = 0; i < 3; i++) { //* right shift the length int 1 byte 
-	        view.setUint8(i, view.getUint8(i+1));
-	    }
-	    view.setUint8(3, FrameType.RC_REQUEST);
-	    view.setUint8(4, 0);
-	    view.setUint32(5, sid);
-	
-	    return <any>view.buffer;
-	}
+
+    private encodeFrame(sid: number, envelope: protobuf.Writer) {
+        return messages.WebsocketEnvelope.encodeDelimited({
+            streamid: sid,
+            envelope: envelope
+        });
+    }
+
+    private decodeFrame(data: Uint8Array) {
+        return messages.WebsocketEnvelope.decodeDelimited(data);
+    }
 	
 	constructor(private socketUrl: string) {
 	    super();
 	    const ws = new WebSocket(socketUrl);
 	    ws.binaryType = "arraybuffer";
+        ws.addEventListener('message', function (event) {
+            
+        });
 	}
 	
-	startObserve(req: any) {
+	protected startObserve(type: messages.MessageType, req: any) {
 	    let envelope = messages.Envelope.encode({
-	        type: this.getMessageType(req),
-	        message: req.encode().finish()
+	        type: type,
+	        message: req
 	    });
 	    let sid = this.nextSid();
 
 	    this.activeRequests[sid] = new Rx.Subject<any>();
-	    this.ws.send(this.makeFrame(sid, envelope));
+	    this.ws.send(this.encodeFrame(sid, envelope));
         return this.activeRequests[sid].asObservable();
 	}
 }`);
         this.stream.end();
     }
 }
+
+
+	// makeFrame(sid: number, envelope: protobuf.Writer): Uint8Array {
+	//     /* Reuse the HTTP/2 frame protocol, rfc 7540 4.1
+	    
+	//         All frames begin with a fixed 9-octet header followed by a variable-
+	//         length payload. All numbers are big endian.
+	
+	//         +-----------------------------------------------+
+	//         |                 Length (24)                   |
+	//         +---------------+---------------+---------------+
+	//         |   Type (8)    |   Flags (8)   |
+	//         +-+-------------+---------------+-------------------------------+
+	//         |R|                 Stream Identifier (31)                      |
+	//         +=+=============================================================+
+	
+	//     */
+	//     const len = envelope.len;
+	//     if (len > Math.pow(2, 24) - 1) {
+	//         throw new RangeError("Cannot send messages greater than 2^24-1 bytes");
+	//     }
+	//     let view  = new DataView(new ArrayBuffer(9));
+	//     view.setUint32(0, len);
+	//     for (let i = 0; i < 3; i++) { //* right shift the length int 1 byte 
+	//         view.setUint8(i, view.getUint8(i+1));
+	//     }
+	//     view.setUint8(3, FrameType.RC_REQUEST);
+	//     view.setUint8(4, 0);
+	//     view.setUint32(5, sid);
+	
+	//     return <any>view.buffer;
+	// }
+
+    // decodeFrame(data: ArrayBuffer) {
+    //     let view = new DataView(data);
+    //     let lengthBuf = new DataView(new ArrayBuffer(4));
+    //     lengthBuf.setUint8(0, 0);
+    //     for (let i = 0; i < 3; i++) {
+    //         lengthBuf.setUint8(i+1, view.getUint8(i));
+    //     }
+    //     let length = lengthBuf.getUint32(0);
+    //     let sid = view.getUint32(5);
+    //     let envelope = messages.Envelope.decode(new Uint8Array(view.buffer.slice(9)));
+    // }
