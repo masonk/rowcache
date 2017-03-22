@@ -1,5 +1,5 @@
 import * as messages from "./generated/messages";
-import { WebsocketService, IWebsocket } from "./generated/socketservice";
+import { WebsocketService, IWebsocket } from "./socketservice";
 import * as WebSocket from "ws";
 const url = "ws://localhost:8081";
 let ws = new WebSocket(url);
@@ -8,7 +8,7 @@ console.log(`Connecting to ${url}`)
 
 ws.on('open', () => {
     console.log(`Opened connection to ${url}`)
-    let sh = new WebsocketService(ws);
+    let sh = new WebsocketService(ws, { verbose: true });
     let message1 = messages.GetUserByLogin.create({
         login: "foobie"
     });

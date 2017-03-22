@@ -44,19 +44,29 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         for (let [idx, name] of this.queryMap()) {
             this.write(`[messages.MessageType.${name}T, messages.${name}],`);
         }
-        this.endBlock(`])\n`);
+        this.endBlock(`]);\n`);
 
         this.startBlock(`export const ClassMap = new Map<number, { new(): MessageType }>([`)
         for (let [idx, name] of qMap) {
             this.write(`[${idx}, messages.${name}],`);
         }
-        this.endBlock(`])\n`);
+        this.endBlock(`]);\n`);
+
+        this.startBlock(`export const ClassNameMap = new Map<number, string>([`)
+        for (let [idx, name] of qMap) {
+            this.write(`[${idx}, '${name}'],`);
+        }
+        this.endBlock(`]);\n`);
 
         this.startBlock(`export const ResponseMap = new Map<messages.MessageType, messages.MessageType>([`)
             for (let [req, res] of this.responseMap()) {
                 this.write(`[messages.MessageType.${req}T, messages.MessageType.${res}T],`)
             }
-        this.endBlock(`])\n`);
+        this.endBlock(`]);\n`);
+
+        this.startBlock(`export function isRequest(type: messages.MessageType) {`);
+            this.write(`return Boolean(ResponseMap.get(type));`)
+        this.endBlock(`};\n`);
 
         this.startBlock(`export function getMessageType(req: any): messages.MessageType {`);
             this.write(`let messageType = messages.MessageType.Unknown`);
