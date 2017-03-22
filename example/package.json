@@ -4,14 +4,12 @@
   "description": "Fully working local example of rowcache's capabilities.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "generate": "rowcachec build/querymanifest.js generated"
   },
   "author": "Mason Kramer",
   "license": "UNLICENSED",
   "dependencies": {
+    "@types/ws": "0.0.39",
     "rowcache": "^0.1.0"
-  },
-  "scripts": {
-      "generate": "rowcachec build/querymanifest.js generated"
   }
 }

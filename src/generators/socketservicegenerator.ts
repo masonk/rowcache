@@ -31,9 +31,8 @@ export class TypeScriptSocketServiceGenerator extends ManifestGenerator {
         let qMap = this.queryMap();
 
 
-        this.write(`import { NormanService, ResponseMap  } from "./rowcacheservice"
+        this.write(`import { RowcacheService, ResponseMap, MessageType, encodeMessage  } from "./rowcacheservice"
 import * as messages from "./messages";
-import { client } from "websocket";
 import * as Rx from "rxjs";
 
 enum FrameType {
@@ -41,8 +40,29 @@ enum FrameType {
 	RC_REQUEST = 2,
 }
 
-export class WebsocketService extends NormanService {
-	private ws: WebSocket;
+/* Pass a connected websocket for the service to use. */
+export interface IWebsocket{
+    addEventListener(method: 'message', cb?: (event: { data: any; type: string; target: WebSocket }) => void): void;
+    addEventListener(method: 'close', cb?: (event: {
+        wasClean: boolean; code: number;
+        reason: string; target: WebSocket
+    }) => void): void;
+    addEventListener(method: 'error', cb?: (err: Error) => void): void;
+    addEventListener(method: 'open', cb?: (event: { target: WebSocket }) => void): void;
+    addEventListener(method: string, listener?: () => void): void;
+    binaryType?: string;
+    send(data: any): void;
+}
+export class WebsocketService extends RowcacheService {
+    	
+	constructor(private ws: IWebsocket) {
+	    super();
+        if (ws.binaryType) {
+            ws.binaryType = 'arraybuffer';
+        }
+
+        ws.addEventListener('message', this.receive.bind(this));
+	}
 	private sid = 1; // In http2 spec, stream identifier 0x0 is reserved, start with 1 
 	private activeRequests: { [streamId: number]: Rx.Subject<any> } = {};
 	private nextSid(): number {
@@ -55,30 +75,25 @@ export class WebsocketService extends NormanService {
 		return this.sid;
 	}
 
-    private encodeFrame(sid: number, envelope: protobuf.Writer) {
+    private receive(msg: MessageEvent) {
+
+    }
+    private encodeFrame(sid: number, envelope: messages.Envelope) {
         return messages.WebsocketEnvelope.encodeDelimited({
             streamid: sid,
             envelope: envelope
-        });
+        }).finish();
     }
 
     private decodeFrame(data: Uint8Array) {
         return messages.WebsocketEnvelope.decodeDelimited(data);
     }
-	
-	constructor(private socketUrl: string) {
-	    super();
-	    const ws = new WebSocket(socketUrl);
-	    ws.binaryType = "arraybuffer";
-        ws.addEventListener('message', function (event) {
-            
-        });
-	}
-	
-	protected startObserve(type: messages.MessageType, req: any) {
-	    let envelope = messages.Envelope.encode({
+
+	protected startObserve(type: messages.MessageType, req: MessageType) {
+        console.log(encodeMessage(req));
+	    let envelope = messages.Envelope.create({
 	        type: type,
-	        message: req
+	        message: encodeMessage(req)
 	    });
 	    let sid = this.nextSid();
 
@@ -86,7 +101,11 @@ export class WebsocketService extends NormanService {
 	    this.ws.send(this.encodeFrame(sid, envelope));
         return this.activeRequests[sid].asObservable();
 	}
-}`);
+
+    protected startObserveDiffs(type: messages.MessageType, req: MessageType) {return <any>{}}
+    protected startQuery(type: messages.MessageType, req: MessageType) { return <any>{} }
+}
+`);
         this.stream.end();
     }
 }

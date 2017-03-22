@@ -1,2 +1,3 @@
-npm run generate
 tsc
+npm run generate
+
