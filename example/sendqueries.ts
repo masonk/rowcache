@@ -16,8 +16,8 @@ ws.on('open', () => {
         first: "Jack",
     });
 
-    sh.observe(message1);
-    sh.observe(m2);
+    sh.observe(message1).subscribe((val: any) => console.log(val));
+    sh.observe(m2).subscribe((val: any) => console.log(val));
 
 })
 
