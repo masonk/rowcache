@@ -37,14 +37,17 @@ wss.on('connection', ws => {
                 try {
                     let msg: any = rowcache.decodeMessage(env.type, env.message);
                     let responseType = rowcache.ResponseMap.get(env.type);
-                    if (!responseType) throw "couldn't find a response type";
-
-                    let responseClass: any = rowcache.ClassMap.get(responseType);
-                    let response: any = responseClass.create({
-                        userLogin: msg.login,
-                        userEmail: "Whatever@yes.com",
-                    });
-                    ws.send(makeResponse(streamid, responseType, response));
+                    if (responseType) {
+                        let responseClass: any = rowcache.ClassMap.get(responseType);
+                        let rt = responseType;
+                        [`cat`, `bear`, `pig`].forEach((val, idx) => {
+                            let response: any = responseClass.create({
+                                userLogin: msg.login,
+                                userEmail: `${val}${idx}@place.com`,
+                            });
+                            ws.send(makeResponse(streamid, rt, response));
+                        })
+                    }
                 }
                 catch (e) {
                     console.warn("received a malformed rowcache request", e);

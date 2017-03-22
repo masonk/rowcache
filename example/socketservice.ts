@@ -46,7 +46,39 @@ export class WebsocketService extends rowcache.RowcacheService {
 
     private receive(msg: MessageEvent) {
         const data = new Uint8Array(msg.data);
-        const payload = this.decodeFrame(data);
+        let envelope: messages.WebsocketEnvelope;
+        try {
+            envelope = this.decodeEnvelope(data);
+        }
+        catch(e) {
+            this.warn("envelope decode error", e);
+            return;
+        }
+
+        const env = envelope.envelope;
+        const streamid = envelope.streamid;
+        const type = env && env.type;
+        const bytes = env && env.message;
+
+        if (streamid && type && bytes) {
+            try {
+                let msg: any = rowcache.decodeMessage(type, bytes);
+                this.log(envelope, msg)
+                this.handleReceive(streamid, type, msg);
+            }
+            catch (e) {
+                this.warn("Payload decode error", e);
+            }
+        }
+        else {
+            this.warn(this.ppEnvelope(envelope));
+        }
+    }
+    private handleReceive(sid: number, type: messages.MessageType, payload: rowcache.MessageType) {
+        let subject = this.activeRequests[sid];
+        if (subject) {
+            subject.next(payload);
+        }
     }
     private ppEnvelope(envelope: messages.WebsocketEnvelope): string {
         const sid = envelope.streamid;
@@ -77,31 +109,12 @@ export class WebsocketService extends rowcache.RowcacheService {
     private warn(msg: string, ...rest: any[]) {
         console.warn(msg, rest);
     }
-
-    private decodeFrame(data: Uint8Array) {
-        try {
-            const reader = protobuf.Reader.create(data);
-            let pb = messages.WebsocketEnvelope.decodeDelimited(reader);
-            const env = pb.envelope;
-            const streamid = pb.streamid;
-            if (!streamid) throw([pb, "no stream id"]);
-            if (!env) throw([pb, "no envelope"]);
-
-            if (env.type && env.message) {
-                try {
-                    let msg: any = rowcache.decodeMessage(env.type, env.message);
-                    this.log(pb, msg)
-                    return msg;
-                }
-                catch (e) {
-                    this.warn("Payload decode error", e);
-                }
-            }
-        }
-        catch(e) {
-            this.warn(e[1], this.ppEnvelope(e[0]));
-        }
+    private decodeEnvelope(data: Uint8Array) {
+        const reader = protobuf.Reader.create(data);
+        let pb = messages.WebsocketEnvelope.decodeDelimited(reader);
+        return pb;
     }
+
     protected send(sid: number, type: messages.MessageType, payload: rowcache.MessageType) {
         let buf = this.encodeFrame(sid, type, payload);
         this.ws.send(buf);
