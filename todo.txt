@@ -1,0 +1,11 @@
+share code between socketservice and socketserver
+    - send and receive perform the same steps on both sides of the wire
+
+generate socketservice and wsserver
+
+generate diff messages
+
+generate insert messages
+    - Command Result
+
+accept query maps in the query manifest that convert from one to the other
