@@ -1,3 +1,0 @@
-tsc
-npm run generate
-

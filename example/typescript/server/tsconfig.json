@@ -1,0 +1,25 @@
+{	
+	"compileOnSave": true,
+    "compilerOptions": {
+		"target": "es2016",
+        "lib": [
+            "dom", // dom is temporarily here due to a limitation in RxJS 5.2. 
+            // https://github.com/ReactiveX/rxjs/issues/1986
+            "es2016"
+        ],
+        "module":"commonjs",
+        "moduleResolution": "node",
+        "noImplicitAny": true,
+        "preserveConstEnums": true,
+		"sourceMap": false,
+        "strictNullChecks": true, // Off for json-typescript-mapper
+		"outDir": "build",
+        "baseUrl": "src",
+        "paths": {
+            "*": [
+                "*",
+                "../shared/*"
+            ]
+        }
+	}
+}

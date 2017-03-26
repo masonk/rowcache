@@ -21,9 +21,9 @@
         "strictNullChecks": true, // Off for json-typescript-mapper
         // This must be kept in sync with output.path and resolve.root
         // in dll.webpack.config and dll.webpack.config
-        "outDir": "dist",
+        "outDir": "../dist",
         // "typeRoots" : ["typings", "@types"],
-        "baseUrl": "src"
+        "baseUrl": "."
     },
     "exclude": [
         "node_modules",

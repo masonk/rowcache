@@ -4,12 +4,16 @@
   "description": "Fully working local example of rowcache's capabilities.",
   "main": "index.js",
   "scripts": {
-    "generate": "rowcachec build/querymanifest.js generated"
+    "bootstrap": "node bootstrap.js"
   },
   "author": "Mason Kramer",
   "license": "UNLICENSED",
   "dependencies": {
     "@types/ws": "0.0.39",
+    "long": "^3.2.0",
     "rowcache": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/long": "^3.0.31"
   }
 }

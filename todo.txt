@@ -1,6 +1,8 @@
 share code between socketservice and socketserver
     - send and receive perform the same steps on both sides of the wire
-
+    - generate handler interfaces for server.
+        - Consume an IHandler from the wsserver.
+        
 generate socketservice and wsserver
 
 generate diff messages
