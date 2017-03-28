@@ -32,18 +32,21 @@ export class ServerGenerator extends ManifestGenerator {
         this.write(`import * as protobuf from "protobufjs"`)
         this.write(`import * as messages from "./messages"\n`);
         
-        this.startBlock(`export interface IRowcacheHandler {`);
-            for (let [req, res] of this.responseMap()) {
-                let re = Case.pascal(req);
-                let rs = Case.pascal(res);
-                for (let method of [`Observe`, `Query`]) {
-                    let monad = method === 'Observe' ? `Observable` : `Promise`;
-                    this.write(`handle${method}${re}?: (reqest: messages.${re}, envelope: messages.Envelope)
-=> ${monad}<messages.${rs}$Properties>;`);
-                }
-                
-            }
-        this.endBlock(`}`);
+        for (let method of [`Observe`, `Query`]) {
+            let monad = method === 'Observe' ? `Observable` : `Promise`;
+            this.startBlock(`export interface IRowcache${monad}Handler {`);
+                for (let [req, res] of this.responseMap()) {
+                    let re = Case.pascal(req);
+                    let rs = Case.pascal(res);
+
+                        this.write(`handle${method}${re}: (request: messages.${re}, envelope: messages.Envelope)
+    => ${monad}<messages.${rs}$Properties>;`);
+                    }
+                    
+            this.endBlock(`}`);
+        }
+
+        this.write(`export interface IRowcacheHandler extends IRowcachePromiseHandler, IRowcacheObservableHandler {}`);
 
         this.write(`
 export class RowcacheSocketServer {

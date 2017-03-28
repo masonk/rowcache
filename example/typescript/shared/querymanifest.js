@@ -30,7 +30,7 @@ exports.manifest = {
             "name": "get_login_by_name",
             "parameters": [{ "name": "first", "type": "contact.first" }],
             "effect": {
-                "select": ["user.login", "user.email"],
+                "select": ["user.first", "user.email"],
                 "from": ["user"],
                 "where": {
                     "parameter": "login",
