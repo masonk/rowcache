@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { TypeScriptServiceGenerator } from "generators/tsservicegenerator";
 import { TypeScriptSocketServiceGenerator } from "generators/socketservicegenerator";
+import { ServerGenerator } from "generators/handlergenerator"
 import { ProtoGenerator } from "generators/protogenerator";
 import * as child from "child_process";
 import * as yargs from "yargs";
@@ -42,9 +43,15 @@ for (let side of ['c', 's']) {
         
         let tsbuilder = new TypeScriptServiceGenerator(manifest, path.resolve(fqoutdir, "rowcacheservice.ts"));
         tsbuilder.emit();
+        if (side === 'c') {
+            let socketgenerator = new TypeScriptSocketServiceGenerator(manifest, path.resolve(fqoutdir, "socketservice.ts"));
+            socketgenerator.emit();
+        }
+        if (side === 's') {
+            let servergenerator = new ServerGenerator(manifest, path.resolve(fqoutdir, "socketserver.ts"));
+            servergenerator.emit();
+        }
 
-        let socketgenerator = new TypeScriptSocketServiceGenerator(manifest, path.resolve(fqoutdir, "socketservice.ts"));
-        socketgenerator.emit();
 
         emit_protos(fqoutdir);
     }

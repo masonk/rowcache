@@ -52,4 +52,5 @@ export class ManifestGenerator {
         }
         return map; 
     }
+
 }
