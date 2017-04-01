@@ -17,8 +17,8 @@ const queries: rc.Query[] = [{
     "name": "get_login_by_name",
     "parameters": [{ "name": "first", "type": "contact.first"}],
     "effect": { 
-        "select": ["user.first", "user.email"],
-        "from": ["user"],
+        "select": ["contact.first", "user.email"],
+        "from": ["user", "contact"],
         "where": {
             "parameter": "login",
             "relationship": rc.WhereRelationship.Equals,

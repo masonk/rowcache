@@ -27,7 +27,7 @@ export class ManifestGenerator {
     lookupType(fqType: string): string {
         let [tableName, columnName] = fqType.split(`\.`);
         if (!this.tables[tableName][columnName]) {
-            console.log(`${columnName}:`, this.tables[tableName]);
+            console.log(`${fqType}:`, this.tables[tableName]);
         }
         return this.tables[tableName][columnName].type;
     }

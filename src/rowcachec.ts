@@ -52,11 +52,11 @@ for (let side of ['client', 'server']) {
         
         let tsbuilder = new TypeScriptServiceGenerator(tables, queries, path.resolve(fqoutdir, "rowcacheservice.ts"));
         tsbuilder.emit();
-        if (side === 'c') {
+        if (side === 'client') {
             let socketgenerator = new TypeScriptSocketServiceGenerator(tables, queries, path.resolve(fqoutdir, "socketservice.ts"));
             socketgenerator.emit();
         }
-        if (side === 's') {
+        if (side === 'server') {
             let servergenerator = new ServerGenerator(tables, queries, path.resolve(fqoutdir, "socketserver.ts"));
             servergenerator.emit();
         }
