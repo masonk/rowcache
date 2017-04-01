@@ -1,3 +1,19 @@
+
+accept query maps in the query manifest that show how to upgrade and downgrade queries
+    - Then automatically infer some relationships and generate "share via downgrade" using this generic facility
+
+generate insert messages
+    - Command Result
+
+generate diff messages 
+    - and code to apply diffs
+
+how to typecheck querymap queries?
+
+piece together the table manifest from multiple files
+piece together the query manifest from multiple files
+    - generate one IHandler interface for each manifest file, rather than one interface for each query.
+
 how to share code between socketservice and socketserver?
     - Generate it in both projects?
         - makes sense since we want to be language-agnostic, and shared code only works if both sides are TS
@@ -5,19 +21,3 @@ how to share code between socketservice and socketserver?
         - Nonshareable code: How to dispatch across the wire. 
             - Client side needs to send a request and then put responses into the rowcache
             - Server side needs to call a handler method and watch the response, no caching
-
-generate handler interfaces for server - one per handle method 
-generate socketservice and wsserver
-
-generate diff messages 
-    - and code to apply diffs
-
-generate insert messages
-    - Command Result
-
-accept query maps in the query manifest that show how to upgrade and downgrade queries
-
-piece together the table manifest from multiple files
-piece together the query manifest from multiple files
-    - generate one IHandler interface for each manifest file, rather than one interface for each query.
-    

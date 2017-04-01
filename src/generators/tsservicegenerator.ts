@@ -9,8 +9,10 @@ type TypeScriptType = "string" | "number" | "boolean"
  | "any";
 
 export class TypeScriptServiceGenerator extends ManifestGenerator {
-    constructor(manifest: rowcache.QueryManifest, outdir: string) {
-        super(manifest, outdir);
+    constructor(protected tables: rowcache.Tables, 
+                protected queries: rowcache.Query[],
+                outdir: string) {
+        super(tables, queries, outdir);
     }
     private mapType(manifestType: string): TypeScriptType {
         if (/^varchar/.test(manifestType)) {
@@ -102,7 +104,7 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         let observeDiffOverloads: string[] = [];
         let queryOverloads: string[] = [];
 
-        let serviceOverloads = this.manifest.queries.forEach(query => {
+        let serviceOverloads = this.queries.forEach(query => {
 
             let qname = Case.pascal(`${query.name}`);
             let fqname = `messages.${qname}`

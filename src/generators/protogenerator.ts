@@ -7,8 +7,10 @@ type ProtobuffType = "double" | "float" | "int32" | "int64" | "uint32" | "uint64
 | "bool" | "string" | "bytes";
 
 export class ProtoGenerator extends ManifestGenerator {
-    constructor(manifest: rowcache.QueryManifest, outdir: string) {
-        super(manifest, outdir);
+    constructor(protected tables: rowcache.Tables, 
+                protected queries: rowcache.Query[], 
+                outdir: string) {
+        super(tables, queries, outdir);
     }
 
     private mapType(manifestType: string): ProtobuffType {
@@ -46,8 +48,7 @@ export class ProtoGenerator extends ManifestGenerator {
             this.write(`Envelope envelope = 2;`);
         this.endBlock(`}`)
 
-        this.manifest.queries.forEach(query => {
-            
+        this.queries.forEach(query => {
             this.startBlock(`message ${this.requestName(query)} {`);
             let requestFields : string[] = [];
             for (let i = 0; i < query.parameters.length; i++) {

@@ -14,8 +14,10 @@ type TypeScriptType = "string" | "number" | "boolean"
    
 */
 export class TypeScriptSocketServiceGenerator extends ManifestGenerator {
-    constructor(manifest: rowcache.QueryManifest, outdir: string) {
-        super(manifest, outdir);
+    constructor(protected tables: rowcache.Tables, 
+                protected queries: rowcache.Query[], 
+                outdir: string) {
+        super(tables, queries, outdir);
     }
     private mapType(manifestType: string): TypeScriptType {
         if (/^varchar/.test(manifestType)) {

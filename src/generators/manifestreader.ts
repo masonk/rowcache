@@ -5,7 +5,10 @@ import * as Case from "case";
 export class ManifestGenerator {
     private indent = 0;
     public stream: fs.WriteStream;
-    constructor(protected manifest: rowcache.QueryManifest, protected outdir: string) {}
+    constructor(protected tables: rowcache.Tables, 
+                protected queries: rowcache.Query[], 
+                protected outdir: string) {}
+                
     write(msg: string) {
         this.stream.write(this.idt(msg) + `\n`);
     }
@@ -23,10 +26,13 @@ export class ManifestGenerator {
     }
     lookupType(fqType: string): string {
         let [tableName, columnName] = fqType.split(`\.`);
-        return this.manifest.tables[tableName][columnName].type;
+        if (!this.tables[tableName][columnName]) {
+            console.log(`${columnName}:`, this.tables[tableName]);
+        }
+        return this.tables[tableName][columnName].type;
     }
     lookupTable(name: string): rowcache.Table {
-        return this.manifest.tables[name];
+        return this.tables[name];
     }
     iterateTable(table: rowcache.Table, fn: (name: string, field: rowcache.ColumnInfo) => void) {
         for (let tname of Object.keys(table)) {
@@ -38,7 +44,7 @@ export class ManifestGenerator {
     queryMap() {
         let map = new Map<number, string>();
         let i = 1;
-        for (let query of this.manifest.queries) {
+        for (let query of this.queries) {
             map.set(i++, this.requestName(query));
             map.set(i++, this.responseName(query));
         }
@@ -47,7 +53,7 @@ export class ManifestGenerator {
     responseMap() {
         let map = new Map<string, string>();
         let i = 1;
-        for (let query of this.manifest.queries) {
+        for (let query of this.queries) {
             map.set(this.requestName(query), this.responseName(query));
         }
         return map; 

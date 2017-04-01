@@ -37,10 +37,7 @@ export interface Query {
     parameters: QueryParameter[];
     effect: SelectStatement;
 }
-export interface QueryManifest {
-    tables: { [name: string]: Table };
-    queries: Query[];
-}
+export interface Tables { [name: string]: Table }
 
 export interface ResultSetDiff<T> {
     delete: string[]; // delete rows by pkey
