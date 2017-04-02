@@ -1,3 +1,4 @@
+get normal queries working - no sharing
 
 accept query maps in the query manifest that show how to upgrade and downgrade queries
     - Then automatically infer some relationships and generate "share via downgrade" using this generic facility

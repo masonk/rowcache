@@ -1,0 +1,237 @@
+RxJs is large. You can get 80% of the value by learning 20% of the content. This is my take on the 80/20 subset of subset ReactiveExtensions (RxJs flavor via TypeScript).
+
+3 Interfaces:
+
+interface Observable<T> {
+    subscribe(next?: (val: T) => void,
+                error?: (err: any) => void,
+                complete?: () => void): Subscription;
+}
+
+interface Observer<T> {
+    next: (val: T) => void;
+    complete: () => void;
+    error: (err: any) => void;
+}
+
+interface Subscription {
+    dispose: () => void;
+}
+    
+An Observable is a thing you can subscribe() to, that "produces" or "publishes" a series of values. An Observer is a thing that takes an action when a value is published. The Observable pattern goes by other names, such as publish/subscribe.
+
+When you subscribe, you pass calbacks that are used to build an Observable. (Or you can directly pass an Observable). If you don't define callbacks, defaults are provided:
+next: no-op
+error: throw an exception
+completed: no-op
+
+An Rx stream is an ordered sequence of values optionally followed by a single completion or error signal. Schematically, values are depicted as letters, completion as the pipe |, and errors as x
+
+a---b---c---|
+This stream emitted three values then signaled completion (i.e., it called next() on your Observer three times then it called complete() on your observer).
+
+a--b--x
+This stream emitted two values then errored.
+
+The best way to understand RxJS operators is to think about marble diagrams. This will never stop being true no matter how long you work with RxJs.
+
+SOME VALUE THAT RX PROVIDES IS OVERT, AND SOME OF IT IS SUBTLE.
+
+1. Rx is often able to automate resource allocation and deallocation. The complete() and error() semantics are there to make sure your subscriptions get cleaned up for you automatically when there are going to be no more values on the stream. Each operator in your stream knows how to clean itself up, and RxJs orchestrates it so that when the stream is unsubscribed, each individual clean-up code is called. 
+
+Sometimes, however, you must manually unsubscribe. Though there is a lot of Rx that you can safely ignore at first, you MUST master the Subscription interface from day 1. This not primarly a matter of resource leaks. This is first and foremost a matter of FUNCTIONAL CORRECTNESS.
+
+It's very simple: whenever you call subscribe(), that call returns a Subscription. If your Subscription potentially has a lifetime that is shorter than the Observable to which it suscribes,  you must track that Subscription and call  unsubscribe() on it manually. A very common place that needs manual lifetime management are GUI widgets that have their own lifecycles under the control of a templating system like React, Angular, or Knockout.
+
+2. Rx does error handling. All the higher level operators do sensible things when the stream errors - usually they close the stream and clean up. (This is huge).
+    
+If you didn't provide one when you subscribed, the default error() handler raises an exception when it is called.
+
+3. Map streams to other streams
+    - MUST KNOW: map, scan, distinctUntilChanged, take, repeat
+
+4. Build streams from simpler values
+    - MUST KNOW:  of, from, defer, empty, never
+
+5. Combine  streams:
+    - MUST KNOW: concat, switch, combineLatest, merge
+
+6. Deal with wall-clock time. 
+    - MUST KNOW: delay, timer, debounce
+
+----------
+
+merge
+    Subscribe to both a and b, then create an output stream that immediately publishes a value when either a or b publishes a value.
+
+concat
+    - Send values from a until it complete(), then send values from b until it complete()s
+    - concatMap: turn a stream of values into a stream of Observables, and concat all these Observables together into one Observable.
+    - startWith: just like concat, but reverse the order
+
+    BONUS RECIPE: Poll a Promise-based API until it returns true. Note that the order of these operators is very important.
+    For some strange reason neophytes often seem to think that operator order shouldn't matter.
+    
+    let poll = Rx.Observable.empty<boolean>()
+        .delay(5000)                                  
+        .concat(Observable.defer(() => getPromise())) 
+        .repeat()
+        .startWith(getPromise())
+        .retry(100)               
+        .takeWhile(v => !v);
+
+    let subscription = poll.subscribe(
+            undefined, 
+            undefined, 
+            () => doSomething())
+    
+    // Annotated version:
+    let poll = 
+        // Start with a stream that immediately signals completion.
+        // |
+
+        Rx.Observable.empty<boolean>()          
+        // Take the stream above and delay of its values by 5s before passing them along.
+        // In this case, the only thing coming along is a completion signal, which we are just delaying by 5s.
+        // -----|
+        .delay(5000)                                  
+        
+        // concat: When the source Observable complete()s, subscribe to the next one.
+        // defer: Create an observable by calling a function that returns a subscribable or promise, then subscribing to that
+        // return value and forwarding the values along.
+        // --------p|
+        .concat(Observable.defer(() => getPromise())) 
+
+        // After the stream above it completes, don't complete: just resubscribe and keep going.
+        // --------p--------p--------p--------p ...
+        .repeat()
+
+        // Take a moment to think about what the above sequence does. Got it? Now continue.
+
+        // a.startWith(b) is exactly like a.concat(b), except in the former case you'll get a stream that subscribes to b
+        // and forwards all of the values of b along. Then when b completes, instead of forwarding the completion,
+        // the stream subscribes a and forwards a to you.
+        // This startWith is only necessary if you don't want to wait 5s before your first poll attempt.
+        // We just want our first one to not be part of the .delayed stream.
+        // p-------p-------p-------p ...
+        .startWith(getPromise())
+        
+        // If the Promise errors - say there was some transient network connection drop when the user unplugged his ethernet cable
+        // we don't necessarily want to error the stream.
+        // Instead of immediately throwing an exception, try to recover by resubscribing to the source stream
+        // up to 100 more times.
+        // p-------p-------p-------p ...
+        .retry(100)
+
+        // We have an infinite repater, so we need to define when to stop the sequence ourselves.
+        // We repeat until the stream returns true
+        // p-------p-------p-------p-|
+        .takeWhile(v => !v);
+        
+        // We've now created a cold sequence that, when subscribed, polls our promise repeatedly until the promise resolves true.
+        // Now we want to start this machine and do something when the stream completes.
+        // Notice that I am only providing a callback to observe complete(). This means I'll get the default next() (a no-op) and a default error() (throw an exception).        
+        // Notice that the poll is on ice. We've defined how to poll but we don't start polling until the subscribe call.
+        // This is really nice: you can define it in one place and pass it along.
+
+        let subscription = poll.subscribe( 
+            undefined, 
+            undefined, 
+            () => doSomething())
+
+switch, switchMap/flatMapLatest
+    - switch turns an Observable of Observables (an Observable<<Observable<T>>) into an Observable<T> by constantly subscribing to the most recent Observable in the stream and unsubscribing from the previous one.
+
+    - switchMap aka flatMapLatest
+    - turns a stream of values into a stream of Observables, then switches over those observables.
+    - switchMap is INCREDIBLY COMMON in practice.
+
+    Bonus recipe: use a stream to pause an observable. Let's use it to pause our polling stream above.
+
+    let isPaused = new Rx.Subject(true);
+
+    let pausableSequence = isPaused.switchMap(paused => paused ? Rx.Observable.never() : poll)
+    // -------------
+    isPaused.next(false); // Start polling.
+    // -------------p----p----p----p----p
+    // later
+
+    isPaused.next(true); // Stop polling.
+    // -------------p----p----p----p----p------------------
+    Note that isPaused need not be a subject. It could be an Observable that corresponds to some Ux state. Perhaps we only want to poll for DB changes is the user has dirty changes in an editable form, so that we can warn him if something changed on the server. The possibilities from these few primitives are extraordinary.
+    
+
+-------------
+MORE NICE OPERATORS THAT I HAVE USED TO SOLVE REAL PROBLEMS
+
+mergeAll
+    Combine a sequence of n Observables by merging them all together into one Observable
+
+timer
+    - do something every n ms
+
+scan
+    - Receive an accumlator and the current value, mutate the accumulator, then return the accumulator. Exactly the same as reduce for arrays, except it emits every intermediate value to subscribers. 
+    - Really useful for finding diffs between old and new version of a sequence.
+    - Much less frequent is the actual "reduce" function, which is .scan().last(). (No reason to learn reduce since it is a tiny amount of sugar over the more general concepts of scan and last).
+
+zip
+do
+various flavors of buffer
+sample
+
+FURTHER CONCEPTS:
+
+HOT VS COLD OBSERVABLE
+The temperature of an Observable refers to what happens when you initially subscribe to it. Does your observer start observing from this point in time, or does it observe a "canned" list of values that exist "on ice", waiting for you to subscribe?
+Cold observables are started over "fresh" each time they are subscribed. If the observable does a lot of work every time it's subscribed, you may not like this behavior. At the bottom of this page read about publish() to share a cold to multiple subscribers (aka multicast).
+
+    - HOT: Suppose you are observing the realtime output of a sensor. You don't want to process values that happened in the past. You just want to process the values as they come in from the time after you subscribe sensor now.
+    - COLD: If you have an Observable.from([1, 2, 3]), you expect to respond to the stream 1--2--3--| every time you subscribe to it.
+    - Mixed: It often happens that you want to process "the current state" and then react to updates. Very common in GUIs, where you need to react to "the current state" of the widget and then react to changes as they come in. Use an Rx.BehaviorSubject to buffer the most recent 1 item in the stream into a cold observable (it gets replayed to you immediately when you subscribe), which is then concatted with a hot observable of "things that have happened since after the moment you subscribed".
+        - The really nice thing is that there is no race. It is not possible to miss a "hot" while you are dealing with the initial "cold": they get buffered for you. One of the million little ways in which Rx makes high level concepts "just work" in subtle ways that you may not even notice. 
+    - HOT: You want to listen for push notifications coming from a wire. Nothing has been listening before you subscribe, so there's no buffer for existing notifications. The wireMessage Observable is hot - of necessity. 
+    - COLD: An interval timer starts from zero each time you subscribe to it.
+
+
+
+SUBJECTS: CREATE A HOT OBSERVABLE BY HAND
+- An observable that publishes values, error, and completion to its subscribers whenever you call .next(), .error(), or .complete() on it. (I.e., an Observable that is also an Observer).
+- If you have a hot data source, like a websocket, temperature readouts, or DOM events, and you want to put it into an Observable interface, you will most likely wrap it in a subject.
+- SUBJECTS ARE HOT
+    - Use a buffered flavor such as BehaviorSubject to get a mixed-temperature stream. (Again, this is common in GUIs: user input must be handled in real-time as it happens, yet there is a concept of "the current state").
+- Subjects are sometimes considered bad practice, but whoever said that probably hasn't done GUI programming. They're fine tools.
+- Just don't expose them as part of your API. Call .asObservable() on them and expose the Observable part, reserving the right to call next(), error(), and complete() to yourself.
+- Rx.BehaviorSubject comes up a lot. Subscribe to "the current state and all future changes"
+    - Think about the code you would have to write to handle this _without any race conditions_
+
+Observable.create: CREATE A COLD OBSERVABLE BY HAND AND AQUIRE RESOURCES WHEN THEY SUBSCRIBE
+    Whenever you want to call a function every time someone subscribes to you:
+        - If you don't need to acquire any resources, use Observable.defer.
+        - If you need to acquire resources, such as a subscription, use Observable.create.
+
+    - With create(), you provide a function:
+        - That is called when somebody subscribes the observable you're creating
+        - That receives the Observer for this new subscription as its sole argument
+        - That calls next(), error() and complete() on that Observer as needed
+        - That _returns_ a function or a Subscription that is called when the stream terminates which allows you to clean yourself up.
+    
+    - You'll end up using this function to implement your own operators.
+
+SCHEDULING
+Scheduling allows you to control the execution context on which your Observable callbacks are called (i.e., where they "observe"). The options are:
+
+- Synchronously at the place in your code where you actually subscribe 
+    - default for simple finite sequences
+- On the browser microqueue (Scheduler.asap)
+- On the browser task queue 
+    - default for asynchronous things, such as "of" a Promise, or any stream that's got some realtime operator on it.
+- Using a fake clock that allows you to unit test clock-time components 
+    - You never tested these kinds of things before because it was impossible, but now you have no excuse.
+
+PUBLISH/CONNECT
+Turn a cold observable into a hot observable so that multiple subscribers can share the same sequence.
+- publish() the observable to create a ConnectableObservable
+- optionally call refcount() 
+- subscribe() all of your subscribers to it. (Nothing will happen yet).
+- connect() the Observable to start sending the sequence to all subscribed listeners.

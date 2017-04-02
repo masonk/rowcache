@@ -43,49 +43,76 @@ let tables = _tables.reduce((p, ts) => {
 }, {})
 
 for (let side of ['client', 'server']) {
-    let outdir = config[side].outDir || ".";
-    if (outdir) {
+
+    let outdirs = [config[side].generatedRoot || path.join(config[side].baseUrl, "generated")];
+    
+    for (let outdir of outdirs) {
         let fqoutdir = path.resolve(path.resolve(cwd, base, outdir));
         if (!fs.existsSync(fqoutdir)) {
             mkdirp.sync(fqoutdir);
         }
-        
-        let tsbuilder = new TypeScriptServiceGenerator(tables, queries, path.resolve(fqoutdir, "rowcacheservice.ts"));
+        const servicepath = path.resolve(fqoutdir, "rowcacheservice.ts");
+        verbalize(servicepath);
+        let tsbuilder = new TypeScriptServiceGenerator(tables, queries, servicepath);
         tsbuilder.emit();
+
         if (side === 'client') {
-            let socketgenerator = new TypeScriptSocketServiceGenerator(tables, queries, path.resolve(fqoutdir, "socketservice.ts"));
+            const socketservicegenerator = path.resolve(fqoutdir, "socketservice.ts");
+            verbalize(socketservicegenerator);
+            let socketgenerator = new TypeScriptSocketServiceGenerator(tables, queries, socketservicegenerator);
             socketgenerator.emit();
         }
         if (side === 'server') {
-            let servergenerator = new ServerGenerator(tables, queries, path.resolve(fqoutdir, "socketserver.ts"));
+            const socketserverpath = path.resolve(fqoutdir, "socketserver.ts");
+            verbalize(socketserverpath);
+            let servergenerator = new ServerGenerator(tables, queries, socketserverpath);
             servergenerator.emit();
         }
 
-
-        emit_protos(fqoutdir);
+        let outDeclarations = config[side].outDir; // Where typescript is going to spit out the build project
+        if (outDeclarations) {
+            let dts = path.resolve(path.resolve(cwd, base, outDeclarations));
+            if (!fs.existsSync(dts)) {
+                mkdirp.sync(dts);    
+            }
+            emit_protos([fqoutdir, dts]);
+        } else  {
+            emit_protos([fqoutdir]);
+        }
     }
 }
 
-function emit_protos(fqoutdir: string) {
-    let protofile = path.resolve(fqoutdir, "messages.proto");
-    let protobuilder = new ProtoGenerator(tables, queries, protofile);
-    protobuilder.emit();
-
-    let protojs = path.resolve(fqoutdir, `messages.js`);
-    let protots = path.resolve(fqoutdir, `messages.d.ts`);
-    let pbjs = path.resolve(__dirname, "../node_modules/.bin/pbjs");
-    let pbts = path.resolve(__dirname, "../node_modules/.bin/pbts");
-    let ret = child.exec(`${pbjs} -t static-module -w commonjs --out ${protojs} ${protofile}`, (err, out, stderr) => {
-        if (out) console.log(out);
-        if (err) console.warn(err);
-        if (stderr) console.warn(stderr);
-
-        if (!err) {
-            child.exec(`${pbts} --out ${protots} ${protojs}`, (err, out, stderr) => {
-                if (out) console.log(out)
-                if (err) console.warn(err)
-                if (stderr) console.warn(stderr);
-            });
-        }
-    });
+function verbalize(str: string) {
+    console.log(str);
 }
+
+function emit_protos(outs: string[]) {
+    for (const outf of outs) {
+        let protofile = path.resolve(outf, "messages.proto");
+        let protobuilder = new ProtoGenerator(tables, queries, protofile);
+        protobuilder.emit();
+
+        let protojs = path.resolve(outf, `messages.js`);
+        let pbjs = path.resolve(__dirname, "../node_modules/.bin/pbjs");
+        let pbts = path.resolve(__dirname, "../node_modules/.bin/pbts");
+        const cmd =`${pbjs} -t static-module -w commonjs --out ${protojs} ${protofile}`;
+        verbalize(protojs);
+        let ret = child.exec(cmd, (err, out, stderr) => {
+            if (out) console.log(out);
+            if (err) console.warn(err);
+            if (stderr) console.warn(stderr);
+
+            if (!err) {
+                let protots = path.resolve(outf, `messages.d.ts`);
+                const tscmd = `${pbts} --out ${protots} ${protojs}`;
+                verbalize(protots);
+                child.exec(tscmd, (err, out, stderr) => {
+                    if (out) console.log(out)
+                    if (err) console.warn(err)
+                    if (stderr) console.warn(stderr);
+                });
+            }
+        });
+    }
+}
+    

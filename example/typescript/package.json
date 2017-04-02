@@ -4,7 +4,9 @@
   "description": "Fully working local example of rowcache's capabilities.",
   "main": "index.js",
   "scripts": {
-    "bootstrap": "node bootstrap.js"
+    "bootstrap": "node scripts/bootstrap.js",
+    "server": "node scripts/server.js",
+    "headless": "node scripts/headless.js"
   },
   "author": "Mason Kramer",
   "license": "UNLICENSED",

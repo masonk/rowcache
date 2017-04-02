@@ -14,11 +14,11 @@
 		"sourceMap": false,
         "strictNullChecks": true, // Off for json-typescript-mapper
 		"outDir": "build",
-        "baseUrl": "src",
+        "baseUrl": ".",
         "paths": {
             "*": [
-                "*",
-                "../shared/*"
+                "src/*",
+                "generated/*"
             ]
         }
 	}

@@ -1,5 +1,8 @@
-import { IRowcacheHandler, RowcacheSocketServer} from "generated/socketserver";
-import * as messages from "generated/messages";
+let path = require("path");
+require('app-module-path').addPath(__dirname);
+require('app-module-path').addPath(path.resolve(__dirname, "../generated"));
+import { IRowcacheHandler, RowcacheSocketServer} from "rc/socketserver";
+import * as messages from "rc/messages";
 import * as Rx from "rxjs/Rx";
 
 class RowcacheHandler implements IRowcacheHandler {
@@ -20,11 +23,11 @@ class RowcacheHandler implements IRowcacheHandler {
 	handleObserveGetLoginByName(req: messages.GetLoginByName, envelope: messages.Envelope) {
         return Rx.Observable.from([
             messages.GetLoginByNameResponse.create({
-                userLogin: "Masonk",
+                contactFirst: "Masonk",
                 userEmail: "mason.kramer@gmail.com"}),
             
             messages.GetLoginByNameResponse.create({
-                userLogin: "Masonk2",
+                contactFirst: "Masonk2",
                 userEmail: "2mason.kramer@gmail.com"}),        
         ]);
     }
