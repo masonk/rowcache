@@ -11,13 +11,13 @@
         "noImplicitAny": true,
         "preserveConstEnums": true,
 		"sourceMap": false,
-        "strictNullChecks": true, // Off for json-typescript-mapper
+        "strictNullChecks": true,
 		"outDir": "build",
-        "baseUrl": "src",
+        "baseUrl": ".",
         "paths": {
             "*": [
-                "*",
-                "../shared/*"
+                "src/*",
+                "generated/*"
             ]
         }
 	}

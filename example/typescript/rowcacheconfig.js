@@ -15,8 +15,8 @@ module.exports = {
     },
     client: {
         language: "typescript",
-        outDir: "client/build/generated", // Where tsc is going to put the ts files that it finds in generatedRoot when it compiles your project
-        generatedRoot: "client/generated", // Where the generated files will go. If you use a packaging system or typescript, you must tell that system to resolve modules here, e.g. by adding a paths entry in tsconfig.json
+        outDir: "client/build/generated/rc", // Where tsc is going to put the ts files that it finds in generatedRoot when it compiles your project
+        generatedRoot: "client/generated/rc", // Where the generated files will go. If you use a packaging system or typescript, you must tell that system to resolve modules here, e.g. by adding a paths entry in tsconfig.json
     },
     server: {
         language: "typescript",

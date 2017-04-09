@@ -1,6 +1,11 @@
-import * as messages from "./generated/messages";
+let path = require("path");
+require('app-module-path').addPath(__dirname);
+require('app-module-path').addPath(path.resolve(__dirname, "../generated"));
+
+import * as messages from "rc/messages";
 import { WebsocketService, IWebsocket } from "./socketservice";
 import * as WebSocket from "ws";
+
 const url = "ws://localhost:8081";
 let ws = new WebSocket(url);
 

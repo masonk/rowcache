@@ -1,5 +1,5 @@
-import * as rowcache from "./generated/rowcacheservice"
-import * as messages from "./generated/messages";
+import * as rowcache from "rc/rowcacheservice"
+import * as messages from "rc/messages";
 import * as Rx from "rxjs";
 import * as protobuf from "protobufjs"
 
