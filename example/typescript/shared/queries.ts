@@ -2,26 +2,26 @@ import * as rc from "rowcache"
 
 const queries: rc.Query[] = [{
     "name": "get_user_by_login",
-    "parameters": [{ "name": "login", "type": "user.login"}],
+    "binds": [{ "name": "login", "type": "user.login"}],
     "effect": { 
         "select": ["user.login", "user.email"],
         "from": ["user"],
         "where": {
             "parameter": "login",
-            "relationship": rc.WhereRelationship.Equals,
+            type: "Equals",
             "dbvalue": "user.login"
         }
     },
 },
 {
     "name": "get_login_by_name",
-    "parameters": [{ "name": "first", "type": "contact.first"}],
+    "binds": [{ "name": "first", "type": "contact.first"}],
     "effect": { 
         "select": ["contact.first", "user.email"],
         "from": ["user", "contact"],
         "where": {
             "parameter": "login",
-            "relationship": rc.WhereRelationship.Equals,
+            type: "Equals",
             "dbvalue": "user.login"
         }
     },

@@ -1,4 +1,10 @@
-get normal queries working - no sharing
+get normal queries working 
+    - why won't the responses decode?
+    - Need to let the server know whether it's an observe or a query 
+        - put something in the envelope
+    - Need a way to cancel observes
+
+get normal queries caching in the db
 
 accept query maps in the query manifest that show how to upgrade and downgrade queries
     - Then automatically infer some relationships and generate "share via downgrade" using this generic facility
@@ -9,7 +15,9 @@ generate insert messages
 generate diff messages 
     - and code to apply diffs
 
-how to typecheck querymap queries?
+generate typings for query binds
+
+validate querymanifest so that it makes sense
 
 piece together the table manifest from multiple files
 piece together the query manifest from multiple files

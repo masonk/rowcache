@@ -55,9 +55,12 @@ export interface IWebsocket{
     binaryType?: string;
     send(data: any): void;
 }
+export interface IWebsocketServiceConfig {
+    verbose?: boolean;
+}
 export class WebsocketService extends RowcacheService {
     	
-	constructor(private ws: IWebsocket) {
+	constructor(private ws: IWebsocket, config: IWebsocketServiceConfig) {
 	    super();
         if (ws.binaryType) {
             ws.binaryType = 'arraybuffer';

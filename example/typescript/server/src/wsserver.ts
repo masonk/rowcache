@@ -1,7 +1,7 @@
 let path = require("path");
 require('app-module-path').addPath(__dirname);
 require('app-module-path').addPath(path.resolve(__dirname, "../generated"));
-import { IRowcacheHandler, RowcacheSocketServer} from "rc/socketserver";
+import { IRowcacheHandler, RowcacheSocketServer} from "./socketserver";
 import * as messages from "rc/messages";
 import * as Rx from "rxjs/Rx";
 

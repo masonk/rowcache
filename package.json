@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "rowcache: the optimizing data service layer. No ORM and No NoSql.",
   "main": "dist/rowcache",
+  "typings": "dist/rowcache",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -12,31 +12,53 @@ export enum WhereRelationship {
 
 export type Clause = WhereAtom | And | Or;
 
-// necessary for "structural typing"
-export enum ClauseType { And, Or }
+export enum ClauseType { And, Or } // necessary for "structural typing"
 export interface And { left: Clause; right: Clause; type: ClauseType.And }
 export interface Or { left: Clause; right: Clause; type: ClauseType.Or }
+export function isAtom(clause: Clause): clause is WhereAtom {
+    if ((<any>clause).dbvalue) {
+        return true;
+    }
+    return false;
+}
 
-export interface WhereAtom {
-    dbvalue: string;
-    relationship: WhereRelationship;
-    parameter: string;
+export function isAnd(clause: Clause): clause is And {
+    if ((<any>clause).type === ClauseType.And) {
+        return true;
+    }
+    return false;
+}
+
+export function isOr(clause: Clause): clause is Or {
+    if ((<any>clause).type === ClauseType.Or) {
+        return true;
+    }
+    return false;
+}
+
+export type WhereAtom = Equals;
+
+export interface Equals {
+    dbvalue: string;  // Name of the column in the DB
+    type: "Equals";
+    parameter: string; // Name of the parameter in the request proto that corresponds to this
 }
 export interface SelectStatement {
     select: string[],
     from: string[],
     where: Clause;
 }
-export interface QueryParameter {
+export interface Bind {
     name: string;
     type: string;
 }
 
 export interface Query {
     name: string;
-    parameters: QueryParameter[];
+    binds: Bind[];
     effect: SelectStatement;
 }
+
 export interface Tables { [name: string]: Table }
 
 export interface ResultSetDiff<T> {

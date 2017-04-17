@@ -1,56 +1,24 @@
-import * as rowcache from "rowcache";
-import * as fs from "fs";
-import { ManifestGenerator } from "generators/manifestreader";
-import * as Case from "case";
+import * as websocket from "ws"
+import * as rowcache from "rc/rowcacheservice"
 import { ResultSet, ResultSetDiff } from "rowcache"
 import { Observable } from "rxjs"
+import * as protobuf from "protobufjs"
+import * as messages from "rc/messages"
 
-type TypeScriptType = "string" | "number" | "boolean" 
- | "any";
+export interface IRowcacheObservableHandler {
+	handleObserveGetUserByLogin: (request: messages.GetUserByLogin, envelope: messages.Envelope)
+	    => Observable<messages.GetUserByLoginResponse$Properties>;
+	handleObserveGetLoginByName: (request: messages.GetLoginByName, envelope: messages.Envelope)
+	    => Observable<messages.GetLoginByNameResponse$Properties>;
+}
+export interface IRowcachePromiseHandler {
+	handleQueryGetUserByLogin: (request: messages.GetUserByLogin, envelope: messages.Envelope)
+	    => Promise<messages.GetUserByLoginResponse$Properties>;
+	handleQueryGetLoginByName: (request: messages.GetLoginByName, envelope: messages.Envelope)
+	    => Promise<messages.GetLoginByNameResponse$Properties>;
+}
+export interface IRowcacheHandler extends IRowcachePromiseHandler, IRowcacheObservableHandler {}
 
-export class ServerGenerator extends ManifestGenerator {
-    constructor(protected tables: rowcache.Tables, 
-                protected queries: rowcache.Query[], 
-                outdir: string) {
-        super(tables, queries, outdir);
-    }
-    private mapType(manifestType: string): TypeScriptType {
-        if (/^varchar/.test(manifestType)) {
-            return "string";
-        }
-        
-        return "any";
-    }
-
-    emit() {
-        let dest = this.outdir;
-        this.stream = fs.createWriteStream(dest, { flags: "w" });
-
-
-        this.write(`import * as websocket from "ws"`);
-        this.write(`import * as rowcache from "./rowcacheservice"`);
-        this.write(`import { ResultSet, ResultSetDiff } from "rowcache"`);
-        this.write(`import { Observable } from "rxjs"`)
-        this.write(`import * as protobuf from "protobufjs"`)
-        this.write(`import * as messages from "./messages"\n`);
-        
-        for (let method of [`Observe`, `Query`]) {
-            let monad = method === 'Observe' ? `Observable` : `Promise`;
-            this.startBlock(`export interface IRowcache${monad}Handler {`);
-                for (let [req, res] of this.responseMap()) {
-                    let re = Case.pascal(req);
-                    let rs = Case.pascal(res);
-
-                        this.write(`handle${method}${re}: (request: messages.${re}, envelope: messages.Envelope)
-    => ${monad}<messages.${rs}$Properties>;`);
-                    }
-                    
-            this.endBlock(`}`);
-        }
-
-        this.write(`export interface IRowcacheHandler extends IRowcachePromiseHandler, IRowcacheObservableHandler {}`);
-
-        this.write(`
 export class RowcacheSocketServer {
     private wss: websocket.Server;
     constructor(private handler: IRowcacheHandler) {
@@ -60,7 +28,7 @@ export class RowcacheSocketServer {
         this.wss.on('connection', ws => {
             console.log('accepting a new connection');
             ws.on('message', data => {
-                console.log(data);
+                console.log(data, '(received)');
                 try {
                     const reader = new protobuf.BufferReader(data);
                     let pb = messages.WebsocketEnvelope.decodeDelimited(reader);
@@ -77,10 +45,10 @@ export class RowcacheSocketServer {
                             if (responseType) {
                                 let responseClass: any = rowcache.ClassMap.get(responseType);
                                 let rt = responseType;
-                                [\`cat\`, \`bear\`, \`pig\`].forEach((val, idx) => {
+                                [`cat`, `bear`, `pig`].forEach((val, idx) => {
                                     let response: any = responseClass.create({
                                         userLogin: msg.login,
-                                        userEmail: \`\${val}\${idx}@place.com\`,
+                                        userEmail: `${val}${idx}@place.com`,
                                     });
                                     ws.send(this.makeResponse(streamid, rt, response));
                                 })
@@ -115,9 +83,8 @@ export class RowcacheSocketServer {
             streamid: streamid,
             envelope: envelope
         }).finish();
+        console.log(wse, '(sent)');
 
         return wse;
-    }
-}`);
     }
 }

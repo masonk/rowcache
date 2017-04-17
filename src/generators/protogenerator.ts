@@ -51,8 +51,8 @@ export class ProtoGenerator extends ManifestGenerator {
         this.queries.forEach(query => {
             this.startBlock(`message ${this.requestName(query)} {`);
             let requestFields : string[] = [];
-            for (let i = 0; i < query.parameters.length; i++) {
-                let param =  query.parameters[i];
+            for (let i = 0; i < query.binds.length; i++) {
+                let param =  query.binds[i];
                 let pname = Case.camel(param.name);
                 let type = Case.camel(this.mapType(this.lookupType(param.type)));
                 this.write(`${type} ${pname} = ${i+1};`)

@@ -1,4 +1,5 @@
 "use strict";
+exports.__esModule = true;
 var tables = {
     "user": {
         "login": { "type": "varchar(256)" },

@@ -60,6 +60,12 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         }
         this.endBlock(`]);\n`);
 
+        this.startBlock(`export const ManifestMap = new Map<messages.MessageType, rowcache.Query>([`)
+        for (let q of this.queries) {
+            this.write(`[messages.MessageType.${this.requestName(q)}T, ${JSON.stringify(q)}],`);
+        }
+        this.endBlock(`]);\n`);
+
         this.startBlock(`export const ResponseMap = new Map<messages.MessageType, messages.MessageType>([`)
             for (let [req, res] of this.responseMap()) {
                 this.write(`[messages.MessageType.${req}T, messages.MessageType.${res}T],`)
