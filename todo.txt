@@ -1,22 +1,20 @@
-get normal queries working 
-    - why won't the responses decode?
-    - Need to let the server know whether it's an observe or a query 
-        - put something in the envelope
-    - Need a way to cancel observes
+generate insert messages
+    - Command Result
+ 
+generate diff messages 
+    - and code to apply diffs
 
-get normal queries caching in the db
+code generate socketservice/socktserver
+    - including doing the per-message parts based on the query manifest
+query caching in the db
+cancel observes
 
 accept query maps in the query manifest that show how to upgrade and downgrade queries
     - Then automatically infer some relationships and generate "share via downgrade" using this generic facility
 
-generate insert messages
-    - Command Result
 
-generate diff messages 
-    - and code to apply diffs
-
+Shared observable DB example with two websites editing the same in-memory DB
 generate typings for query binds
-
 validate querymanifest so that it makes sense
 
 piece together the table manifest from multiple files

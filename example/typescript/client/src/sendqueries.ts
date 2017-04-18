@@ -23,8 +23,8 @@ ws.on('open', () => {
 
     sh.observe(message1).subscribe((val: any) => console.log(val));
     sh.observe(m2).subscribe((val: any) => console.log(val));
-    // sh.query(m2).then(v => console.log(`got promise ${v}`));
-    // sh.query(m2).then(v => console.log(`got promise ${v}`));
+    sh.query(m2).then(v => console.log(`got promise ${v}`));
+    sh.query(message1).then(v => console.log(`got promise ${v}`));
 })
 
 

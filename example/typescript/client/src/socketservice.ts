@@ -48,6 +48,14 @@ export class WebsocketService extends RowcacheService {
 		}
 		return this.sid;
 	}
+
+    private reclaimSid(sid: number) {
+        let active = this.activeRequests[sid];
+        if (active) {
+            active.complete();
+        delete this.activeRequests[sid];
+        }
+    }
     pad(n: string, width: number, z = '0') {
         return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
     }
@@ -57,23 +65,21 @@ export class WebsocketService extends RowcacheService {
         return `<Buffer ${hex.join(" ")}>`;
     }
     private receive(msg: MessageEvent) {
-
-        console.log(`${this.printBuffer(msg.data)} (received)`);
-        const reader = new protobuf.Reader(msg.data);
+        const reader = new protobuf.Reader(new Uint8Array(msg.data));
+        this.logReceive(msg.data);
         let pb = messages.WebsocketEnvelope.decodeDelimited(reader);
         let sid = pb.streamid;
-
         if (sid !== undefined) {
             let watcher = this.activeRequests[sid];
+            
             if (watcher) {
                 let rcenv = pb.envelope;
                 if (rcenv) {
                     let type = rcenv.type;
                     if (type) {
                         if (rcenv.message) {
-                            let msg = decodeMessage(type, rcenv.message);
-                            console.log(msg);
-                            watcher.next(msg);
+                            let dm = decodeMessage(type, rcenv.message);
+                            watcher.next(dm);
                         }
                     }
                 }
@@ -87,11 +93,18 @@ export class WebsocketService extends RowcacheService {
         }).finish();
     }
 
+    protected logSend(buf: Uint8Array) {
+        console.log(buf, "(sent)");
+    }
+    protected logReceive(buf: ArrayBuffer) {
+        console.log(`${this.printBuffer(buf)} (received)`);
+    }
 	protected startObserve(type: messages.MessageType, req: MessageType) {
-        console.log(encodeMessage(req), "(sent)");
+        this.logSend(encodeMessage(req));
 	    let envelope = messages.Envelope.create({
 	        type: type,
-	        message: encodeMessage(req)
+	        message: encodeMessage(req),
+            commandType: messages.CommandType.ObserveQuery
 	    });
 	    let sid = this.nextSid();
 
@@ -112,24 +125,27 @@ export class WebsocketService extends RowcacheService {
             let sid = this.nextSid();
             let envelope = messages.Envelope.create({
                 type: type,
-                message: encodeMessage(req)
+                message: encodeMessage(req),
+                commandType: messages.CommandType.Query
             });
-            this.activeRequests[sid] = new Rx.ReplaySubject<any>();
+
+            this.logSend(this.encodeFrame(sid, envelope));
+            let sub = new Rx.ReplaySubject<any>();
+            
+            this.activeRequests[sid] = sub;
+            let prom = new Promise((resolve, reject) => {
+                sub.take(1).subscribe(resolve, reject, () => {
+                    console.log(`reclaiming ${sid}`);
+                    sub.complete();
+                    this.reclaimSid(sid);
+                });
+            });
+            
             this.ws.send(this.encodeFrame(sid, envelope));
-        
-            return new Promise((resolve, rej) => {
-                let sub = this.activeRequests[sid].asObservable().take(1).subscribe(resolve, rej, () => this.reclaimSid(sid));
-                this.subs.add(sub);
-            });
+
+            return prom;
         }
      }
 
-     private reclaimSid(sid: number) {
-         let active = this.activeRequests[sid];
-         if (active) {
-             active.complete();
-            delete this.activeRequests[sid];
-         }
-     }
 }
 

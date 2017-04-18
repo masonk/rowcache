@@ -36,11 +36,19 @@ export class ProtoGenerator extends ManifestGenerator {
         }
         this.endBlock(`}\n`);
 
+       /* commandType */
+        this.startBlock(`enum CommandType {`);
+        for (let [idx, name] of [`Query`, `ObserveQuery`, `ObserveQueryDiff`, `CompleteObserve`, `UpgradeObservableQuery`].entries()) {
+            this.write(`${name} = ${idx};`)
+        }
+        this.endBlock(`}\n`);
+
         /* envelope */                
         this.startBlock(`message Envelope {`);
             this.write(`MessageType type = 1;`);
             this.write(`string version = 2;`);
             this.write(`bytes message = 3;`);
+            this.write(`CommandType commandType = 4;`)
         this.endBlock(`}\n`)
 
         this.startBlock(`message WebsocketEnvelope {`);

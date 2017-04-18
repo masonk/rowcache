@@ -1,7 +1,7 @@
 {
   "name": "rowcache",
   "version": "0.1.0",
-  "description": "rowcache: the optimizing data service layer. No ORM and No NoSql.",
+  "description": "rowcache: the optimizing data service layer",
   "main": "dist/rowcache",
   "typings": "dist/rowcache",
   "scripts": {
@@ -10,15 +10,14 @@
   "author": "Mason Kramer",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@types/node": "^7.0.8",
-    "@types/sockjs": "^0.3.30",
-    "@types/websocket": "0.0.33",
-    "retyped-websocket-tsd-ambient": "0.0.0-0"
-  },
-  "dependencies": {
     "@types/mkdirp": "^0.3.29",
     "@types/ws": "0.0.39",
     "@types/yargs": "^6.6.0",
+    "@types/node": "^6.0.0",
+    "@types/sockjs": "^0.3.30",
+    "@types/websocket": "0.0.33"
+  },
+  "dependencies": {
     "app-module-path": "^2.2.0",
     "case": "^1.5.0",
     "mkdirp": "^0.5.1",
