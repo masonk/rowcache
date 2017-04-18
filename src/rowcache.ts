@@ -59,6 +59,14 @@ export interface Query {
     effect: SelectStatement;
 }
 
+export interface Insert {
+    name: string;
+    table: string;
+    columns: string[];
+}
+
+export type Command = Insert;
+
 export interface Tables { [name: string]: Table }
 
 export interface ResultSetDiff<T> {

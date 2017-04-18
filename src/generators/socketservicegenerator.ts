@@ -16,8 +16,9 @@ type TypeScriptType = "string" | "number" | "boolean"
 export class TypeScriptSocketServiceGenerator extends ManifestGenerator {
     constructor(protected tables: rowcache.Tables, 
                 protected queries: rowcache.Query[], 
+                protected commands: rowcache.Command[],
                 outdir: string) {
-        super(tables, queries, outdir);
+        super(tables, queries, commands, outdir);
     }
     private mapType(manifestType: string): TypeScriptType {
         if (/^varchar/.test(manifestType)) {
@@ -33,7 +34,7 @@ export class TypeScriptSocketServiceGenerator extends ManifestGenerator {
         let qMap = this.queryMap();
 
 
-        this.write(`import { RowcacheService, ResponseMap, MessageType, encodeMessage  } from "./rowcacheservice"
+        this.write(`import { RowcacheService, ResponseMap, ManifestType, encodeMessage  } from "./rowcacheservice"
 import * as messages from "./messages";
 import * as Rx from "rxjs";
 
@@ -94,7 +95,7 @@ export class WebsocketService extends RowcacheService {
         return messages.WebsocketEnvelope.decodeDelimited(data);
     }
 
-	protected startObserve(type: messages.MessageType, req: MessageType) {
+	protected startObserve(type: messages.ManifestType, req: ManifestType) {
         console.log(encodeMessage(req));
 	    let envelope = messages.Envelope.create({
 	        type: type,
@@ -107,8 +108,8 @@ export class WebsocketService extends RowcacheService {
         return this.activeRequests[sid].asObservable();
 	}
 
-    protected startObserveDiffs(type: messages.MessageType, req: MessageType) {return <any>{}}
-    protected startQuery(type: messages.MessageType, req: MessageType) { return <any>{} }
+    protected startObserveDiffs(type: messages.ManifestType, req: ManifestType) {return <any>{}}
+    protected startQuery(type: messages.ManifestType, req: ManifestType) { return <any>{} }
 }
 `);
         this.stream.end();

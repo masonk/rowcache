@@ -13,6 +13,11 @@ module.exports = {
             "shared/queries.js",
         ]
     },
+    commands: {
+        paths: [
+            "shared/commands.js"
+        ]
+    },
     client: {
         language: "typescript",
         outDir: "client/build/generated/rc", // Where tsc is going to put the ts files that it finds in generatedRoot when it compiles your project

@@ -26,12 +26,15 @@ if (!config) {
     process.exit();
 }
 let qpaths: string[] = config.queries && config.queries.paths || [];
+let cpaths: string[] = config.commands && config.commands.paths || [];
 let tpaths: string[] = config.tables && config.tables.paths || [];
+
 let base = config.baseDir || ".";
 let _queries: rowcache.Query[][] = qpaths.map(p => require(path.resolve(cwd, base, p)));
 let _tables: rowcache.Tables[]  = tpaths.map(p => require(path.resolve(cwd, base, p)));
-
+let _commands: rowcache.Command[][] = cpaths.map(p => require(path.resolve(cwd, base, p)));
 let queries = _queries.reduce((p, n) => p.concat(n), []);
+let commands = _commands.reduce((p, n) => p.concat(n), []);
 let tables = _tables.reduce((p, ts) => {
     for (let k of Object.keys(ts)) {
         if (p[k]) {
@@ -40,7 +43,7 @@ let tables = _tables.reduce((p, ts) => {
         p[k] = ts[k];
     }
     return p;
-}, {})
+}, {});
 
 for (let side of ['client', 'server']) {
 
@@ -53,19 +56,19 @@ for (let side of ['client', 'server']) {
         }
         const servicepath = path.resolve(fqoutdir, "rowcacheservice.ts");
         verbalize(servicepath);
-        let tsbuilder = new TypeScriptServiceGenerator(tables, queries, servicepath);
+        let tsbuilder = new TypeScriptServiceGenerator(tables, queries, commands, servicepath);
         tsbuilder.emit();
 
         if (side === 'client') {
             const socketservicegenerator = path.resolve(fqoutdir, "socketservice.ts");
             verbalize(socketservicegenerator);
-            let socketgenerator = new TypeScriptSocketServiceGenerator(tables, queries, socketservicegenerator);
+            let socketgenerator = new TypeScriptSocketServiceGenerator(tables, queries, commands, socketservicegenerator);
             socketgenerator.emit();
         }
         if (side === 'server') {
             const socketserverpath = path.resolve(fqoutdir, "socketserver.ts");
             verbalize(socketserverpath);
-            let servergenerator = new ServerGenerator(tables, queries, socketserverpath);
+            let servergenerator = new ServerGenerator(tables, queries, commands, socketserverpath);
             servergenerator.emit();
         }
 
@@ -89,7 +92,7 @@ function verbalize(str: string) {
 function emit_protos(outs: string[]) {
     for (const outf of outs) {
         let protofile = path.resolve(outf, "messages.proto");
-        let protobuilder = new ProtoGenerator(tables, queries, protofile);
+        let protobuilder = new ProtoGenerator(tables, queries, commands, protofile);
         protobuilder.emit();
 
         let protojs = path.resolve(outf, `messages.js`);

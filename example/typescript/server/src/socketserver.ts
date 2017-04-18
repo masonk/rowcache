@@ -57,7 +57,7 @@ export class RowcacheSocketServer {
                     if (!streamid) throw ("no streamid");
                     if (!env) throw ("no envelope");
 
-                    if (env && env.type && env.message) {
+                    if (env && env.type != null && env.message) {
                         try {
                             let msg = rowcache.decodeMessage(env.type, env.message);
                             let responseType = rowcache.ResponseMap.get(env.type);
@@ -66,34 +66,34 @@ export class RowcacheSocketServer {
                                 let rt = responseType;
 
                                 if (responseClass) {
-                                    if (env.type === messages.MessageType.GetLoginByNameT) {
+                                    if (env.type === messages.ManifestType.GetLoginByNameT) {
                                         const m = msg as messages.GetLoginByName;
                                         const r = responseClass as typeof messages.GetUserByLoginResponse;
-                                        if (env.commandType === messages.CommandType.ObserveQuery) {
+                                        if (env.operation === messages.OperationType.Observe) {
                                             let obs = handler.handleObserveGetLoginByName(m, env);
                                             let sub = obs.subscribe(v => {
                                                 ws.send(this.makeResponse(streamid, rt, r.create(v)));
                                             });
                                             this.activeRequests[streamid] = sub;
                                         }
-                                        else if (env.commandType === messages.CommandType.Query) {
+                                        else if (env.operation === messages.OperationType.Query) {
                                             let prom = handler.handleQueryGetLoginByName(m, env);
                                             prom.then(v => {
                                                 ws.send(this.makeResponse(streamid, rt, r.create(v)));
                                             })
                                         }
                                     }
-                                    else if (env.type === messages.MessageType.GetUserByLoginT) {
+                                    else if (env.type == messages.ManifestType.GetUserByLoginT) {
                                         const m = msg as messages.GetUserByLogin;
                                         const r = responseClass as typeof messages.GetLoginByNameResponse;
-                                        if (env.commandType === messages.CommandType.ObserveQuery) {
+                                        if (env.operation === messages.OperationType.Observe) {
                                             let obs = handler.handleObserveGetUserByLogin(m, env);
                                             let sub = obs.subscribe(v => {
                                                 ws.send(this.makeResponse(streamid, rt, r.create(v)));
                                             });
                                             this.activeRequests[streamid] = sub;
                                         }
-                                        else if (env.commandType === messages.CommandType.Query) {
+                                        else if (env.operation === messages.OperationType.Query) {
                                             let prom = handler.handleQueryGetUserByLogin(m, env);
                                             prom.then(v => {
                                                 ws.send(this.makeResponse(streamid, rt, r.create(v)));
@@ -122,7 +122,7 @@ export class RowcacheSocketServer {
             });
         });
     }
-    makeResponse(streamid: number, type: messages.MessageType, response: rowcache.ResponseType) {
+    makeResponse(streamid: number, type: messages.ManifestType, response: rowcache.ResponseType) {
         let envelope = messages.Envelope.create({
             type: type,
             message: rowcache.encodeMessage(response)

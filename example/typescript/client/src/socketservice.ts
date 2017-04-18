@@ -1,4 +1,4 @@
-import { ClassMap, RowcacheService, ResponseMap, ManifestMap, MessageType, RequestType, encodeMessage, decodeMessage  } from "rc/rowcacheservice"
+import { ClassMap, RowcacheService, ResponseMap, ManifestMap, ManifestType, RequestType, encodeMessage, decodeMessage  } from "rc/rowcacheservice"
 import * as messages from "rc/messages"
 import * as Rx from "rxjs"
 import * as Case from "case"
@@ -99,12 +99,12 @@ export class WebsocketService extends RowcacheService {
     protected logReceive(buf: ArrayBuffer) {
         console.log(`${this.printBuffer(buf)} (received)`);
     }
-	protected startObserve(type: messages.MessageType, req: MessageType) {
+	protected startObserve(type: messages.ManifestType, req: ManifestType) {
         this.logSend(encodeMessage(req));
 	    let envelope = messages.Envelope.create({
 	        type: type,
 	        message: encodeMessage(req),
-            commandType: messages.CommandType.ObserveQuery
+            operation: messages.OperationType.Observe
 	    });
 	    let sid = this.nextSid();
 
@@ -113,8 +113,8 @@ export class WebsocketService extends RowcacheService {
         return this.activeRequests[sid].asObservable();
 	}
 
-    protected startObserveDiffs(type: messages.MessageType, req: RequestType) {return <any>{}}
-    protected startQuery(type: messages.MessageType, req: RequestType) {
+    protected startObserveDiffs(type: messages.ManifestType, req: RequestType) {return <any>{}}
+    protected startQuery(type: messages.ManifestType, req: RequestType) {
         const query = ManifestMap.get(type);
         if (query == null) throw `Unknown querytype '${type}'`
 
@@ -126,7 +126,7 @@ export class WebsocketService extends RowcacheService {
             let envelope = messages.Envelope.create({
                 type: type,
                 message: encodeMessage(req),
-                commandType: messages.CommandType.Query
+                operation: messages.OperationType.Query
             });
 
             this.logSend(this.encodeFrame(sid, envelope));

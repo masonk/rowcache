@@ -1,8 +1,8 @@
 import * as $protobuf from "protobufjs";
 
 /**
- * MessageType enum.
- * @exports MessageType
+ * ManifestType enum.
+ * @exports ManifestType
  * @enum {number}
  * @property {number} Unknown=0 Unknown value
  * @property {number} GetUserByLoginT=1 GetUserByLoginT value
@@ -10,7 +10,7 @@ import * as $protobuf from "protobufjs";
  * @property {number} GetLoginByNameT=3 GetLoginByNameT value
  * @property {number} GetLoginByNameResponseT=4 GetLoginByNameResponseT value
  */
-export enum MessageType {
+export enum ManifestType {
     Unknown = 0,
     GetUserByLoginT = 1,
     GetUserByLoginResponseT = 2,
@@ -22,12 +22,12 @@ export enum MessageType {
  * Properties of an Envelope.
  * @typedef Envelope$Properties
  * @type {Object}
- * @property {MessageType} [type] Envelope type.
+ * @property {ManifestType} [type] Envelope type.
  * @property {string} [version] Envelope version.
  * @property {Uint8Array} [message] Envelope message.
  */
 type Envelope$Properties = {
-    type?: MessageType;
+    type?: ManifestType;
     version?: string;
     message?: Uint8Array;
 };
@@ -50,9 +50,9 @@ export class Envelope {
 
     /**
      * Envelope type.
-     * @type {MessageType|undefined}
+     * @type {ManifestType|undefined}
      */
-    public type?: MessageType;
+    public type?: ManifestType;
 
     /**
      * Envelope version.

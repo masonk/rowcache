@@ -11,8 +11,9 @@ type TypeScriptType = "string" | "number" | "boolean"
 export class TypeScriptServiceGenerator extends ManifestGenerator {
     constructor(protected tables: rowcache.Tables, 
                 protected queries: rowcache.Query[],
+                protected commands: rowcache.Command[],
                 outdir: string) {
-        super(tables, queries, outdir);
+        super(tables, queries, commands, outdir);
     }
     private mapType(manifestType: string): TypeScriptType {
         if (/^varchar/.test(manifestType)) {
@@ -40,15 +41,15 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
 
         this.write(`export type RequestType = ${requestClassString};`);
         this.write(`export type ResponseType = ${responseClassString};`);
-        this.write(`export type MessageType = RequestType | ResponseType;\n`);
+        this.write(`export type ManifestType = RequestType | ResponseType;\n`);
         
-        this.startBlock(`export const EnumClassMap = new Map<messages.MessageType, { new(): MessageType }>([`)
+        this.startBlock(`export const EnumClassMap = new Map<messages.ManifestType, { new(): ManifestType }>([`)
         for (let [idx, name] of this.queryMap()) {
-            this.write(`[messages.MessageType.${name}T, messages.${name}],`);
+            this.write(`[messages.ManifestType.${name}T, messages.${name}],`);
         }
         this.endBlock(`]);\n`);
 
-        this.startBlock(`export const ClassMap = new Map<number, { new(): MessageType }>([`)
+        this.startBlock(`export const ClassMap = new Map<number, { new(): ManifestType }>([`)
         for (let [idx, name] of qMap) {
             this.write(`[${idx}, messages.${name}],`);
         }
@@ -60,24 +61,24 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         }
         this.endBlock(`]);\n`);
 
-        this.startBlock(`export const ManifestMap = new Map<messages.MessageType, rowcache.Query>([`)
+        this.startBlock(`export const ManifestMap = new Map<messages.ManifestType, rowcache.Query>([`)
         for (let q of this.queries) {
-            this.write(`[messages.MessageType.${this.requestName(q)}T, ${JSON.stringify(q)}],`);
+            this.write(`[messages.ManifestType.${this.requestName(q)}T, ${JSON.stringify(q)}],`);
         }
         this.endBlock(`]);\n`);
 
-        this.startBlock(`export const ResponseMap = new Map<messages.MessageType, messages.MessageType>([`)
+        this.startBlock(`export const ResponseMap = new Map<messages.ManifestType, messages.ManifestType>([`)
             for (let [req, res] of this.responseMap()) {
-                this.write(`[messages.MessageType.${req}T, messages.MessageType.${res}T],`)
+                this.write(`[messages.ManifestType.${req}T, messages.ManifestType.${res}T],`)
             }
         this.endBlock(`]);\n`);
 
-        this.startBlock(`export function isRequest(type: messages.MessageType) {`);
+        this.startBlock(`export function isRequest(type: messages.ManifestType) {`);
             this.write(`return Boolean(ResponseMap.get(type));`)
         this.endBlock(`};\n`);
 
-        this.startBlock(`export function getMessageType(req: any): messages.MessageType {`);
-            this.write(`let messageType = messages.MessageType.Unknown`);
+        this.startBlock(`export function getManifestType(req: any): messages.ManifestType {`);
+            this.write(`let messageType = messages.ManifestType.Unknown`);
             for (let [typeEnum, className] of qMap) {
                 this.startBlock(`if (req instanceof messages.${className}) {`)
                     this.write(`messageType = ${typeEnum};`)
@@ -87,7 +88,7 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         this.endBlock(`}\n`);
 
         this.write(`export function getMessageClass(req: any): any {
-    let type = getMessageType(req);
+    let type = getManifestType(req);
     let klass = ClassMap.get(type);
     return klass as any;
 }
@@ -101,7 +102,7 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
     return new Uint8Array(0);
 }
 `);
-        this.write(`export function decodeMessage(type: messages.MessageType, bytes: Uint8Array | Buffer): MessageType {
+        this.write(`export function decodeMessage(type: messages.ManifestType, bytes: Uint8Array | Buffer): ManifestType {
     let klass = ClassMap.get(type);
     return (klass as any).decodeDelimited(protobuf.Reader.create(bytes));
 }`);
@@ -122,14 +123,14 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
 
 
         this.startBlock("export abstract class RowcacheService {");
-            [`protected abstract startObserve(type: messages.MessageType, req: MessageType): Observable<ResultSet<any>>;`,
-            `protected abstract startObserveDiffs(type: messages.MessageType, req: MessageType): Observable<ResultSetDiff<any>>;`,
-            `protected abstract startQuery(type: messages.MessageType, req: MessageType): Promise<any>;`].forEach(line => {
+            [`protected abstract startObserve(type: messages.ManifestType, req: ManifestType): Observable<ResultSet<any>>;`,
+            `protected abstract startObserveDiffs(type: messages.ManifestType, req: ManifestType): Observable<ResultSetDiff<any>>;`,
+            `protected abstract startQuery(type: messages.ManifestType, req: ManifestType): Promise<any>;`].forEach(line => {
                 this.write(line);
             });
-    /*        let messageType: messages.MessageType;
+    /*        let messageType: messages.ManifestType;
             if (req instanceof messages.GetUserByLogin) {
-                messageType = messages.MessageType.GetUserByLogin;
+                messageType = messages.ManifestType.GetUserByLogin;
             }
             let pb = messages.Envelope.create({ type: messageType, message: req.encode().finish()}).encode().finish();
     */
@@ -139,21 +140,21 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
             }
 
             this.startBlock(`observe(req: RequestType) {`);
-                this.write(`return this.startObserve(getMessageType(req), req);`)
+                this.write(`return this.startObserve(getManifestType(req), req);`)
             this.endBlock(`}`);
 
             for (let ol of observeDiffOverloads) {
                 this.write(ol);
             }
             this.startBlock(`observeDiffs(req: RequestType) {`);
-                this.write(`return this.startObserveDiffs(getMessageType(req), req);`)
+                this.write(`return this.startObserveDiffs(getManifestType(req), req);`)
             this.endBlock(`}`);
 
             for (let ol of queryOverloads) {
                 this.write(ol);
             }
             this.startBlock(`query(req: RequestType) {`);
-                this.write(`return this.startQuery(getMessageType(req), req);`)
+                this.write(`return this.startQuery(getManifestType(req), req);`)
             this.endBlock(`}`);
 
         this.endBlock(`}`);

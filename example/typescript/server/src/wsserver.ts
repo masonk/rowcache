@@ -7,7 +7,6 @@ import * as Rx from "rxjs/Rx";
 
 class RowcacheHandler implements IRowcacheHandler {
 
-
 	handleObserveGetUserByLogin(req: messages.GetUserByLogin, envelope: messages.Envelope) {
         console.log("Observer GetUser")
         return Rx.Observable.from([
@@ -34,18 +33,16 @@ class RowcacheHandler implements IRowcacheHandler {
         ]);
     }
 
-
 	handleQueryGetUserByLogin(req: messages.GetUserByLogin, envelope: messages.Envelope) {
-        console.log("Query GetUser")
         return Promise.resolve({
-                userLogin: "Masonk",
+                userLogin: "Get Promise Masonk",
                 userEmail: "mason.kramer@gmail.com"})
     }
 	    
 	handleQueryGetLoginByName(req: messages.GetLoginByName, envelope: messages.Envelope) {
         console.log("Query GetLogin")
         return Promise.resolve({
-                userLogin: "Masonk3",
+                contactFirst: "Get Promise Masonk3",
                 userEmail: "mason.kramer@gmail3.com"})
     }
 }

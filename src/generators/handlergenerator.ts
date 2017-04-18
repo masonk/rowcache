@@ -11,8 +11,9 @@ type TypeScriptType = "string" | "number" | "boolean"
 export class ServerGenerator extends ManifestGenerator {
     constructor(protected tables: rowcache.Tables, 
                 protected queries: rowcache.Query[], 
+                protected commands: rowcache.Command[],
                 outdir: string) {
-        super(tables, queries, outdir);
+        super(tables, queries, commands, outdir);
     }
     private mapType(manifestType: string): TypeScriptType {
         if (/^varchar/.test(manifestType)) {
@@ -25,7 +26,6 @@ export class ServerGenerator extends ManifestGenerator {
     emit() {
         let dest = this.outdir;
         this.stream = fs.createWriteStream(dest, { flags: "w" });
-
 
         this.write(`import * as websocket from "ws"`);
         this.write(`import * as rowcache from "./rowcacheservice"`);
@@ -105,7 +105,7 @@ export class RowcacheSocketServer {
             });
         });
     }
-    makeResponse(streamid: number, type: messages.MessageType, response: rowcache.ResponseType) {
+    makeResponse(streamid: number, type: messages.ManifestType, response: rowcache.ResponseType) {
         let envelope = messages.Envelope.create({
             type: type,
             message: rowcache.encodeMessage(response)
