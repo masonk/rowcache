@@ -59,8 +59,8 @@ export class WebsocketService extends RowcacheService {
     private receive(msg: MessageEvent) {
 
         console.log(`${this.printBuffer(msg.data)} (received)`);
-        const reader = new protobuf.BufferReader(msg.data);
-        let pb = messages.WebsocketEnvelope.decodeDelimited(new Uint8Array(msg.data));
+        const reader = new protobuf.Reader(msg.data);
+        let pb = messages.WebsocketEnvelope.decodeDelimited(reader);
         let sid = pb.streamid;
 
         if (sid !== undefined) {
