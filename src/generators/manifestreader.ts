@@ -46,32 +46,28 @@ export class ManifestGenerator {
     requestName = (query: rowcache.Query) => Case.pascal(query.name);
     responseName = (query: rowcache.Query) => Case.pascal(`${this.requestName(query)}Response`);
     commandName = (command: rowcache.Command) => Case.pascal(command.name);
-    commandResponseName = (command: rowcache.Command) => Case.pascal(`${this.commandName(command)}Response`)
-    queryMap() {
+    commandResponseName = (command: rowcache.Command) => Case.pascal(`CommandResponse`)
+    messageMap() {
         let map = new Map<number, string>();
+        /* "Unknown" type is implicitly 0 */
         let i = 1;
         for (let query of this.queries) {
             map.set(i++, this.requestName(query));
             map.set(i++, this.responseName(query));
         }
-        return map;
-    }
-    commandEnum() {
-        let map = new Map<number, string>();
-        let idx = 1;
         for (let command of this.commands) {
-            map.set(idx++, this.commandName(command));
-            map.set(idx++, this.commandResponseName(command));
+            map.set(i++, this.commandName(command));
         }
         return map;
     }
-    commandResponseMap() {
+    commandNameToResponseName() {
         let map = new Map<string, string>();
         for (let com of this.commands) {
             map.set(this.commandName(com), this.commandResponseName(com));
         }
+        return map;
     }
-    responseMap() {
+    queryNameToResponseName() {
         let map = new Map<string, string>();
         for (let query of this.queries) {
             map.set(this.requestName(query), this.responseName(query));

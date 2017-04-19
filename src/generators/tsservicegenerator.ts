@@ -22,64 +22,57 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         
         return "any";
     }
-
+    private import(what: string[], from: string, as?: string) {
+        this.write(`import { ${what.join(", ")} } from "${from}"`)
+    }
+    private importAll(as: string, from: string) {
+        this.write(`import * as ${as} from "${from}"`);
+    }
+    private typedecl(name: string, types: string[]) {
+        this.write(`export type ${name} = ${types.join(" | ")};`)
+    }
+    private map(name: string, tkey: string, tval: string, pairs: string[][]) {
+        this.startBlock(`export const ${name} = new Map<${tkey}, ${tval}>([`);
+            this.write(pairs.map(p => `[${p[0]}, ${p[1]}]`).join(",\n"));
+        this.endBlock(`]);`)
+    }
     emit() {
         let dest = this.outdir;
         this.stream = fs.createWriteStream(dest, { flags: "w" });
-        let qMap = this.queryMap();
+        let messageMap = this.messageMap();
+        const mmsg = (v: string) => `messages.${v}`;
 
-        this.write(`import * as rowcache from "rowcache"`);
-        this.write(`import { ResultSet, ResultSetDiff } from "rowcache"`);
-        this.write(`import { Observable } from "rxjs"`)
-        this.write(`import * as protobuf from "protobufjs"`)
-        this.write(`import * as messages from "./messages"\n`);
+        this.importAll("rowcache", "rowcache");
+        this.importAll("protobuf", "protobufjs");
+        this.importAll("messages", "./messages");
+        this.import(["Observable"], "rxjs");
 
-        let requestTypes = this.responseMap().keys();
-        let responseTypes = this.responseMap().values();
-        let requestClassString = [...requestTypes].map(t => `messages.${t}`).join("  | ");
-        let responseClassString = [...responseTypes].map(t => `messages.${t}`).join("  | ");
+        this.typedecl("CommandType", [...this.commandNameToResponseName().keys()].map(mmsg));
+        this.typedecl("QueryType",   [...this.queryNameToResponseName().keys()].map(mmsg));
+        this.typedecl("QueryResponseType", [...this.queryNameToResponseName().values()].map(mmsg));
+        this.typedecl("RequestType", ["CommandType", "QueryType"]);
+        this.typedecl("ResponseType", [mmsg("CommandResponse"), "QueryResponseType"]);
+        this.typedecl("ManifestType", ["RequestType", "ResponseType"]);
+                
+        this.map("ClassMap", "messages.ManifestType", "any", 
+            [...messageMap.values()].map(v => [`messages.ManifestType.${v}T`, `messages.${v}`]));
 
-        this.write(`export type RequestType = ${requestClassString};`);
-        this.write(`export type ResponseType = ${responseClassString};`);
-        this.write(`export type ManifestType = RequestType | ResponseType;\n`);
-        
-        this.startBlock(`export const EnumClassMap = new Map<messages.ManifestType, { new(): ManifestType }>([`)
-        for (let [idx, name] of this.queryMap()) {
-            this.write(`[messages.ManifestType.${name}T, messages.${name}],`);
-        }
-        this.endBlock(`]);\n`);
+        this.map("QueryInfo", "messages.ManifestType", "rowcache.Query", this.queries.map(q => {
+            return [`messages.ManifestType.${this.requestName(q)}T`, JSON.stringify(q)]
+        }));
 
-        this.startBlock(`export const ClassMap = new Map<number, { new(): ManifestType }>([`)
-        for (let [idx, name] of qMap) {
-            this.write(`[${idx}, messages.${name}],`);
-        }
-        this.endBlock(`]);\n`);
-
-        this.startBlock(`export const ClassNameMap = new Map<number, string>([`)
-        for (let [idx, name] of qMap) {
-            this.write(`[${idx}, '${name}'],`);
-        }
-        this.endBlock(`]);\n`);
-
-        this.startBlock(`export const ManifestMap = new Map<messages.ManifestType, rowcache.Query>([`)
-        for (let q of this.queries) {
-            this.write(`[messages.ManifestType.${this.requestName(q)}T, ${JSON.stringify(q)}],`);
-        }
-        this.endBlock(`]);\n`);
-
-        this.startBlock(`export const ResponseMap = new Map<messages.ManifestType, messages.ManifestType>([`)
-            for (let [req, res] of this.responseMap()) {
-                this.write(`[messages.ManifestType.${req}T, messages.ManifestType.${res}T],`)
-            }
-        this.endBlock(`]);\n`);
+        this.map("ResponseTForRequestT", "messages.ManifestType", "messages.ManifestType", 
+            [...this.queryNameToResponseName(), ...this.commandNameToResponseName()].map(p => {
+                return [`messages.ManifestType.${p[0]}T`, `messages.ManifestType.${p[1]}T`]
+            }));
 
         this.startBlock(`export function isRequest(type: messages.ManifestType) {`);
-            this.write(`return Boolean(ResponseMap.get(type));`)
+            this.write(`return ~Boolean(ResponseTForRequestT.get(type));`)
         this.endBlock(`};\n`);
 
         this.startBlock(`export function getManifestType(req: any): messages.ManifestType {`);
             this.write(`let messageType = messages.ManifestType.Unknown`);
-            for (let [typeEnum, className] of qMap) {
+            for (let [typeEnum, className] of messageMap) {
                 this.startBlock(`if (req instanceof messages.${className}) {`)
                     this.write(`messageType = ${typeEnum};`)
                 this.endBlock(`}`);
@@ -110,52 +103,59 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         let observeOverloads: string[] = [];
         let observeDiffOverloads: string[] = [];
         let queryOverloads: string[] = [];
+        let commandOverloads = this.commands.map(c => {
+            let name = Case.pascal(`${c.name}`);
+            let fqname = `messages.${name}`;
+            return `execute(command: ${fqname}): Promise<messages.CommandResponse>;`
+        })
 
-        let serviceOverloads = this.queries.forEach(query => {
+        this.queries.forEach(query => {
 
             let qname = Case.pascal(`${query.name}`);
             let fqname = `messages.${qname}`
 
-            observeOverloads.push(`observe(req: ${fqname}): Observable<ResultSet<${fqname}Response>>;`);
-            observeDiffOverloads.push(`observeDiffs(req: ${fqname}): Observable<ResultSetDiff<${fqname}Response>>;`);
-            queryOverloads.push(`query(req: ${fqname}): Promise<ResultSet<${fqname}Response>>;`)
+            observeOverloads.push(`observe(req: ${fqname}): Observable<${fqname}Response>;`);
+            observeDiffOverloads.push(`observeDiffs(req: ${fqname}): Observable<messages.${this.requestName(query)}Diff>;`);
+            queryOverloads.push(`query(req: ${fqname}): Promise<${fqname}Response>;`)
         });
 
 
         this.startBlock("export abstract class RowcacheService {");
-            [`protected abstract startObserve(type: messages.ManifestType, req: ManifestType): Observable<ResultSet<any>>;`,
-            `protected abstract startObserveDiffs(type: messages.ManifestType, req: ManifestType): Observable<ResultSetDiff<any>>;`,
-            `protected abstract startQuery(type: messages.ManifestType, req: ManifestType): Promise<any>;`].forEach(line => {
+            [`protected abstract startObserve(type: messages.ManifestType, req: QueryType): Observable<any>;`,
+            `protected abstract startObserveDiffs(type: messages.ManifestType, req: QueryType): Observable<any>;`,
+            `protected abstract startQuery(type: messages.ManifestType, req: QueryType): Promise<any>;`,
+            `protected abstract startExecute(type: messages.ManifestType, req: CommandType): Promise<any>;`].forEach(line => {
                 this.write(line);
             });
-    /*        let messageType: messages.ManifestType;
-            if (req instanceof messages.GetUserByLogin) {
-                messageType = messages.ManifestType.GetUserByLogin;
-            }
-            let pb = messages.Envelope.create({ type: messageType, message: req.encode().finish()}).encode().finish();
-    */
-
+    
             for (let ol of observeOverloads) {
                 this.write(ol);
             }
 
-            this.startBlock(`observe(req: RequestType) {`);
+            this.startBlock(`observe(req: QueryType) {`);
                 this.write(`return this.startObserve(getManifestType(req), req);`)
             this.endBlock(`}`);
 
             for (let ol of observeDiffOverloads) {
                 this.write(ol);
             }
-            this.startBlock(`observeDiffs(req: RequestType) {`);
+            this.startBlock(`observeDiffs(req: QueryType) {`);
                 this.write(`return this.startObserveDiffs(getManifestType(req), req);`)
             this.endBlock(`}`);
 
             for (let ol of queryOverloads) {
                 this.write(ol);
             }
-            this.startBlock(`query(req: RequestType) {`);
+            this.startBlock(`query(req: QueryType) {`);
                 this.write(`return this.startQuery(getManifestType(req), req);`)
             this.endBlock(`}`);
+
+            for (let ol of commandOverloads) {
+                this.write(ol);
+            }
+            this.startBlock(`execute(req: CommandType) {`);
+                this.write(`return this.startExecute(getManifestType(req), req);`);
+            this.endBlock(`}`)
 
         this.endBlock(`}`);
         this.stream.end();

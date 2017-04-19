@@ -1,4 +1,4 @@
-import { ClassMap, RowcacheService, ResponseMap, ManifestMap, ManifestType, RequestType, encodeMessage, decodeMessage  } from "rc/rowcacheservice"
+import { ClassMap, RowcacheService, ManifestType, QueryInfo, RequestType, CommandType, encodeMessage, decodeMessage  } from "rc/rowcacheservice"
 import * as messages from "rc/messages"
 import * as Rx from "rxjs"
 import * as Case from "case"
@@ -112,10 +112,10 @@ export class WebsocketService extends RowcacheService {
 	    this.ws.send(this.encodeFrame(sid, envelope));
         return this.activeRequests[sid].asObservable();
 	}
-
+    protected startExecute(type: messages.ManifestType, req: CommandType) { return <any>{} }
     protected startObserveDiffs(type: messages.ManifestType, req: RequestType) {return <any>{}}
     protected startQuery(type: messages.ManifestType, req: RequestType) {
-        const query = ManifestMap.get(type);
+        const query = QueryInfo.get(type);
         if (query == null) throw `Unknown querytype '${type}'`
 
         if (this.db.canSatisfy(query, req)) {

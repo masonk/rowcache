@@ -31,7 +31,7 @@ export class TypeScriptSocketServiceGenerator extends ManifestGenerator {
     emit() {
         let dest = this.outdir;
         this.stream = fs.createWriteStream(dest, { flags: "w" });
-        let qMap = this.queryMap();
+        let qMap = this.messageMap();
 
 
         this.write(`import { RowcacheService, ResponseMap, ManifestType, encodeMessage  } from "./rowcacheservice"

@@ -1,9 +1,4 @@
-generate insert messages
-    - Command Result
- 
-generate diff messages 
-    - and code to apply diffs
-
+code to handle insert messages
 code generate socketservice/socktserver
     - put client/src/socketservice and server/src/socketserver back into code generation
     - including doing the per-message parts based on the query manifest
@@ -16,7 +11,7 @@ accept query maps in the query manifest that show how to upgrade and downgrade q
     - Then automatically infer some relationships and generate "share via downgrade" using this generic facility
 
 query caching in the db
-
+code to handle diffs
 cancel observes
 
 

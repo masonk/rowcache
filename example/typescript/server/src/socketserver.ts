@@ -60,7 +60,7 @@ export class RowcacheSocketServer {
                     if (env && env.type != null && env.message) {
                         try {
                             let msg = rowcache.decodeMessage(env.type, env.message);
-                            let responseType = rowcache.ResponseMap.get(env.type);
+                            let responseType = rowcache.ResponseTForRequestT.get(env.type);
                             if (responseType) {
                                 let responseClass = rowcache.ClassMap.get(responseType);
                                 let rt = responseType;

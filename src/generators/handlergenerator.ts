@@ -37,7 +37,7 @@ export class ServerGenerator extends ManifestGenerator {
         for (let method of [`Observe`, `Query`]) {
             let monad = method === 'Observe' ? `Observable` : `Promise`;
             this.startBlock(`export interface IRowcache${monad}Handler {`);
-                for (let [req, res] of this.responseMap()) {
+                for (let [req, res] of this.queryNameToResponseName()) {
                     let re = Case.pascal(req);
                     let rs = Case.pascal(res);
 
