@@ -25,6 +25,13 @@ ws.on('open', () => {
     sh.observe(m2).subscribe((val: any) => console.log(val));
     sh.query(m2).then(v => console.log(`got promise`, v));
     sh.query(message1).then(v => console.log(`got promise`, v));
+    sh.execute(messages.AddUser.create({
+        binds: [messages.AddUserBinds.create({
+            login: "New Login",
+            passhash: "Sucker",
+            email: "yep@nope.com"
+        })]
+    }));
 })
 
 

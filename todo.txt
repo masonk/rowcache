@@ -1,21 +1,29 @@
 code to handle insert messages
+
+spend some thought on the service object api for insert/update/upsert/delete
+    
 code generate socketservice/socktserver
     - put client/src/socketservice and server/src/socketserver back into code generation
     - including doing the per-message parts based on the query manifest
-    - lots of duplicated code between these files. 
-    - 
+    - can the duplicated code between these files be cleaned up?
+        - Shareable code: decode a wire message, and encode a wire response
+            - Nonshareable code: How to dispatch across the wire. 
+                - Client side needs to send a request and then put responses into the rowcache
+                - Server side needs to call a handler method and watch the response, no caching
+
 Shared observable DB example with two websites editing the same in-memory DB
 
-
+query caching in the db
 accept query maps in the query manifest that show how to upgrade and downgrade queries
     - Then automatically infer some relationships and generate "share via downgrade" using this generic facility
 
-query caching in the db
+___ POST TO GITHUB ___
+
 code to handle diffs
+
+
+
 cancel observes
-
-
-
 
 generate typings for query binds
 validate querymanifest so that it makes sense
@@ -24,10 +32,8 @@ piece together the table manifest from multiple files
 piece together the query manifest from multiple files
     - generate one IHandler interface for each manifest file, rather than one interface for each query.
 
-how to share code between socketservice and socketserver?
-    - Generate it in both projects?
-        - makes sense since we want to be language-agnostic, and shared code only works if both sides are TS
-    - Shareable code: decode a wire message, and encode a wire response
-        - Nonshareable code: How to dispatch across the wire. 
-            - Client side needs to send a request and then put responses into the rowcache
-            - Server side needs to call a handler method and watch the response, no caching
+actually reclaim sids
+generate validation code for db types
+read postgres describe output into a table 
+    column whitelisting, blacklisting, and aliasing
+accept ANSI SQL insert, upsert, delete, and select commands

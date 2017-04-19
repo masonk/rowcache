@@ -55,7 +55,7 @@ export class TypeScriptServiceGenerator extends ManifestGenerator {
         this.typedecl("ManifestType", ["RequestType", "ResponseType"]);
                 
         this.map("ClassMap", "messages.ManifestType", "any", 
-            [...messageMap.values()].map(v => [`messages.ManifestType.${v}T`, `messages.${v}`]));
+            ["CommandResponse", ...messageMap.values()].map(v => [`messages.ManifestType.${v}T`, `messages.${v}`]));
 
         this.map("QueryInfo", "messages.ManifestType", "rowcache.Query", this.queries.map(q => {
             return [`messages.ManifestType.${this.requestName(q)}T`, JSON.stringify(q)]

@@ -40,10 +40,14 @@ class RowcacheHandler implements IRowcacheHandler {
     }
 	    
 	handleQueryGetLoginByName(req: messages.GetLoginByName, envelope: messages.Envelope) {
-        console.log("Query GetLogin")
         return Promise.resolve({
                 contactFirst: "Get Promise Masonk3",
                 userEmail: "mason.kramer@gmail3.com"})
+    }
+
+    handleAddUser(req: messages.AddUser, envelope: messages.Envelope) {
+        console.log("Handling addUser");
+        return Promise.resolve();
     }
 }
 new RowcacheSocketServer(new RowcacheHandler());

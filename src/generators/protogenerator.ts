@@ -46,7 +46,7 @@ export class ProtoGenerator extends ManifestGenerator {
 
         this.writeEnum("ManifestType", ["Unknown"].concat([...this.messageMap().values(), "CommandResponse"]
             .map(v => `${v}T`))); /* ugly hack due to protobuf namespacing limitations: enum member symbols aren't separately namespaced from siblings of the enum */
-        this.writeEnum("OperationType", [`Query`, `Observe`, `ObserveDiff`, `Unsubscribe`, `UpgradeQuery`, `Insert`, `Add`, `Upsert`, `Delete`, `Batch`, `Transaction`]);
+        this.writeEnum("OperationType", [`Query`, `Observe`, `ObserveDiff`, `Unsubscribe`, `UpgradeQuery`, `Insert`, `Update`, `Upsert`, `Delete`, `Batch`, `Transaction`, `Opaque`]);
         this.writeEnum("ResponseCode", ["OK", "NotAuthorized", "Error"]);
 
         /* envelope */               
@@ -55,7 +55,9 @@ export class ProtoGenerator extends ManifestGenerator {
             [`ManifestType`, `type`],
             [`string`, `version`],
             [`bytes`, `message`],
-            [`OperationType`, `operation`]
+            [`OperationType`, `operation`],
+            [`ResponseCode`, `code`],
+            [`string`, `codeinfo`]
         ]);
         
         this.writeMessage(`WebsocketEnvelope`, [
