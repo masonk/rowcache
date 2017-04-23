@@ -46,16 +46,16 @@ Rowcache alpha exists now only as a small example that, nevertheless, shows a co
 cd $REPO
 npm install
 npm link
-cd (example/typescript)[example/typescript]
+cd (example/typescript) [example/typescript]
 npm install
 npm link rowcache
 npm run bootstrap
 cd server
-ts-node (src/wsserver.ts)[example/typescript/server/wsserver.ts] &
+ts-node (src/wsserver.ts) [example/typescript/server/wsserver.ts] &
 cd ../client
 ts-node src/sendqueries.ts
 ```
 
-Also take a gander at the (manifests)[example/typescript/shared], a (headless client)[example/typescript/client/sendqueries.ts] and the (server)[example/typescript/server/wsserver.ts].
+Also take a gander at the (manifests) [example/typescript/shared], a (headless client) [example/typescript/client/sendqueries.ts] and the (server) [example/typescript/server/wsserver.ts].
 
 Note that socketserver.ts and socketservice.ts are handwritten now, but are destined to be code-generated in the future.
