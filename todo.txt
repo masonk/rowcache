@@ -1,4 +1,5 @@
 code to handle insert messages
+    - Insert values into rowcache.db (with notifications)
 
 spend some thought on the service object api for insert/update/upsert/delete
     
