@@ -3,7 +3,7 @@
 
 ## What you do.
 
-1. Define your service API as a json data structure representing virtual SQL tables (the _table manifest_) and json data structure representing a list queries over those tables (the _query manifest_). 
+1. Define your service API as a json data structure representing virtual SQL tables (the _table manifest_) and a json data structure representing a list of queries on those tables (the _query manifest_). 
 2. Run the rowcachec compiler to generate code.
 3. Implement the handler interfaces that Rowcache generated for the server.
 
@@ -32,8 +32,30 @@
 
 ## Key value propositions
 
-1. Latency efficient. The best queries are ones you never have to send. 
-2. Bandwidth efficient. It's so easy to add another SQL query that you'll never have to ask for data you don't need just to re-use an existing endpoint.
+1. Latency efficient. The best queries are ones you never have to send. Joins allow you to ask for all the data you need in one shot, and the cache prevents duplicate queries from going over the wire.
+2. Bandwidth efficient. It's so easy to add another SQL query that you'll never have to ask for data you don't need just to re-use an existing endpoint, nor will you be tempted to inefficiently reuse an existing endpoint in order to get your client-side cache to share results.
 3. DRY: Only describe your data one time, and use it efficiently and type-safely on both sides of the wire.
-4. Separation of concerns. You won't be tempted to organize your data service layer as one giant blob of global state, a la Reflux, in order to dedupe / fact share. Each widget knows how to query for the data it wants and how those requirements get serviced is an orthogonal concern that is resolved behind the rowcache service API.
+4. Separation of concerns. You won't be tempted to organize your data service layer as one giant blob of global state, a la Reflux, in order to dedupe / fact share. Each widget knows how to query for the data it wants and how those requests get serviced is an orthogonal concern that is resolved behind the rowcache service API.
 5. No impedance mismatch. If your data is relational, then querying it relationally is the most efficient way: pass along your database's true power directly to the client.
+6. Observable or Promise interface to your data.
+
+## Run the Example
+Rowcache alpha exists now only as a small example that, nevertheless, shows a complete project layout and request-response roundtripping for inserts, query observation, and single-shot queries.
+
+```
+cd $REPO
+npm install
+npm link
+cd (example/typescript)[example/typescript]
+npm install
+npm link rowcache
+npm run bootstrap
+cd server
+ts-node (src/wsserver.ts)[example/typescript/server/wsserver.ts] &
+cd ../client
+ts-node src/sendqueries.ts
+```
+
+Also take a gander at the (manifests)[example/typescript/shared], a (headless client)[example/typescript/client/sendqueries.ts] and the (server)[example/typescript/server/wsserver.ts].
+
+Note that socketserver.ts and socketservice.ts are handwritten now, but are destined to be code-generated in the future.
