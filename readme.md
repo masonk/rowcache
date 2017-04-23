@@ -58,6 +58,6 @@ cd ../client
 ts-node src/sendqueries.ts
 ```
 
-Also take a gander at the [manifests] (example/typescript/shared), a [headless client](example/typescript/client/sendqueries.ts) and the [server] (example/typescript/server/wsserver.ts).
+Also take a gander at the [manifests](example/typescript/shared), a [headless client](example/typescript/client/sendqueries.ts) and the [server](example/typescript/server/wsserver.ts).
 
 Note that socketserver.ts and socketservice.ts are handwritten now, but are destined to be code-generated in the future.
