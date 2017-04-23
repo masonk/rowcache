@@ -29,6 +29,8 @@
 8. A utility to read a database schema and generate the table manifest automatically.
 9. Write your table manifest and query manifest as literal SQL statements, instead of in a pseudo-sql JSON structure.
 10. Generate validation code that enforces constraints in your table manifest on both sides of the wire (even if your backend isn't TypeScript).
+11. Support other backend languages. (E.g., Go).
+12. Support other transport layers. (E.g., grpc-web).
 
 ## Key value propositions
 
@@ -46,16 +48,16 @@ Rowcache alpha exists now only as a small example that, nevertheless, shows a co
 cd $REPO
 npm install
 npm link
-cd (example/typescript) [example/typescript]
+cd example/typescript
 npm install
 npm link rowcache
 npm run bootstrap
 cd server
-ts-node (src/wsserver.ts) [example/typescript/server/wsserver.ts] &
+ts-node src/wsserver.ts &
 cd ../client
 ts-node src/sendqueries.ts
 ```
 
-Also take a gander at the (manifests) [example/typescript/shared], a (headless client) [example/typescript/client/sendqueries.ts] and the (server) [example/typescript/server/wsserver.ts].
+Also take a gander at the [manifests] (example/typescript/shared), a [headless client](example/typescript/client/sendqueries.ts) and the [server] (example/typescript/server/wsserver.ts).
 
 Note that socketserver.ts and socketservice.ts are handwritten now, but are destined to be code-generated in the future.
