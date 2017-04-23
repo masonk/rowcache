@@ -11,11 +11,11 @@
   "author": "Mason Kramer",
   "license": "UNLICENSED",
   "dependencies": {
-    "@types/ws": "0.0.39",
     "long": "^3.2.0",
     "rowcache": "^0.1.0"
   },
   "devDependencies": {
-    "@types/long": "^3.0.31"
+    "@types/long": "^3.0.31",
+    "@types/ws": "0.0.39"
   }
 }
