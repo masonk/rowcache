@@ -44,13 +44,17 @@
 ## Run the Example
 Rowcache alpha exists now only as a small example that, nevertheless, shows a complete project layout and request-response roundtripping for inserts, query observation, and single-shot queries.
 
+This is a 'developer's release'. The npm module is not hosted on npm yet. You have to compile the module locally and link it to run the example. 
+
 ```
 cd $REPO
 npm install
+cd src
+tsc
 npm link
-cd example/typescript
-npm install
+cd ../example/typescript
 npm link rowcache
+npm install
 npm run bootstrap
 cd server
 ts-node src/wsserver.ts &
@@ -58,6 +62,6 @@ cd ../client
 ts-node src/sendqueries.ts
 ```
 
-Also take a gander at the [manifests](example/typescript/shared), a [headless client](example/typescript/client/sendqueries.ts) and the [server](example/typescript/server/wsserver.ts).
+Also take a gander at the [manifests](example/typescript/shared), a [headless client](example/typescript/client/src/sendqueries.ts) and the [server](example/typescript/server/src/wsserver.ts).
 
 Note that socketserver.ts and socketservice.ts are handwritten now, but are destined to be code-generated in the future.
