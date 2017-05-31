@@ -51,7 +51,7 @@ cd $REPO
 npm install
 cd src
 tsc
-npm link
+[sudo] npm link
 cd ../example/typescript
 npm link rowcache
 npm install

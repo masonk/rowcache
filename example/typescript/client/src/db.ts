@@ -39,16 +39,22 @@ export class RowCacheDB {
             t.rows.push(rs);
             let note = this.notifications.get(table);
             if (note) {
-                note.next({ insert: rs })
+                note.next({ update: rs })
             }
         }
+    }
+
+    observeNotification(query: rowcache.Query, req: rc.RequestType): Rx.Observable<Notification> {
+        let notificationStreams 
+        
+
     }
     
     canSatisfy(q: rowcache.Query, req: rc.RequestType) {
         return false;
     }
 
-    query(query: rowcache.Query, req: rc.RequestType): any[] | null {
+    query(query: rowcache.Query, req: rc.RequestType): Promise<any[]> {
         let tables = query.effect.from;
         const where = query.effect.where;
         if (where) {
@@ -60,10 +66,10 @@ export class RowCacheDB {
                     if (where.type === "Equals") {
                         if (this.canSatisfy(query, req)) {
                             const bind = query.binds[0];
-                            return t.rows.filter(r => r[column] === (req as any)[Case.camel(bind.name)]);
+                            return Promise.resolve(t.rows.filter(r => r[column] === (req as any)[Case.camel(bind.name)]));
                         }
                         else {
-                            return null;
+                            return Promise.resolve([]);
                         }
                     }
                 }
@@ -75,7 +81,7 @@ export class RowCacheDB {
 
             }
         }
-        return [];
+        return Promise.resolve([]);
     }
     private atomic_clause_predicate(where: rowcache.WhereAtom) {
         const [ table, column ] = where.dbvalue.split(/[.]/);

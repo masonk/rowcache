@@ -1,3 +1,5 @@
+redo queries to handle joins
+
 code to handle insert messages
     - Insert values into rowcache.db (with notifications)
 

@@ -146,7 +146,7 @@ export class WebsocketService extends RowcacheService {
         if (query == null) throw `Unknown querytype '${type}'`
 
         if (this.db.canSatisfy(query, req)) {
-            return Promise.resolve(this.db.query(query, req));
+            return this.db.query(query, req);
         }
         else {
             let sid = this.nextSid();
